@@ -26,19 +26,21 @@ def parse_arguments():
 
 def get_top_crypto(num=10, currency='usd', sort_by='market_cap', categories=None):
     cg = CoinGeckoAPI()
-    coins = cg.get_coins_markets(vs_currency=currency, order=sort_by, per_page=num, page=1, sparkline=False, price_change_percentage='24h,7d,30d')
+    coins = cg.get_coins_markets(vs_currency=currency, order=sort_by, per_page=num, page=1, sparkline=False, price_change_percentage='24h')
 
     if categories:
         coins = [coin for coin in coins if any(category.lower() in (coin_category['name'].lower() for coin_category in coin['categories']) for category in categories)]
 
     df = pd.DataFrame(coins)
-    df = df[['id', 'symbol', 'name', 'market_cap_rank', 'current_price', 'market_cap', 'total_volume', 'price_change_percentage_24h', 'price_change_percentage_7d', 'price_change_percentage_30d']]
-    df.columns = ['id', 'symbol', 'name', 'rank', 'price', 'market_cap', 'volume', '24h_change', '7d_change', '30d_change']
+    df = df[['id', 'symbol', 'name', 'market_cap_rank', 'current_price', 'market_cap']]
+    df.columns = ['id', 'symbol', 'name', 'rank', 'price', 'market_cap']
     df['symbol'] = df['symbol'].str.upper()
 
     return df
 
+
 def filter_crypto(df, min_market_cap=0, max_market_cap=None, min_24h_change=None, min_7d_change=None, min_30d_change=None, exclude=[], include=[]):
+
     if max_market_cap is not None:
         df = df[df['market_cap'] <= max_market_cap]
     if min_24h_change is not None:
@@ -52,31 +54,15 @@ def filter_crypto(df, min_market_cap=0, max_market_cap=None, min_24h_change=None
     if include:
         df = df[df['id'].isin(include)]
 
-    return df[df['market_cap'] >= min_market_cap]
-
-def export_data(df, export_format='csv', file_name='crypto_data'):
-    if not os.path.exists('output'):
-        os.makedirs('output')
-
-    if export_format == 'csv':
-        df.to_csv(f'output/{file_name}.csv', index=False)
-    elif export_format == 'json':
-        df.to_json(f'output/{file_name}.json', orient='records')
-    elif export_format == 'excel':
-        df.to_excel(f'output/{file_name}.xlsx', index=False)
+    return df
 
 def price_alert(df, symbol, target_price, alert_type='above'):
-    coin = df[df['symbol'] == symbol.upper()]
-    if not coin.empty:
-        price = coin.iloc[0]['price']
+    if not df[df['symbol'] == symbol.upper()].empty:  # Check if there is a matching row
+        coin = df[df['symbol'] == symbol.upper()]
+        price = coin.iloc[0]['price']  # Access the 'price' column
         if (alert_type == 'above' and price >= target_price) or (alert_type == 'below' and price <= target_price):
             print(f"Price alert: {symbol.upper()} is {alert_type} {target_price}")
-            
-def get_historical_data(coin_id, currency='usd', days='30', interval='daily'):
-    cg = CoinGeckoAPI()
-    historical_data = cg.get_coin_market_chart(coin_id, vs_currency=currency, days=days, interval=interval)
 
-    return pd.DataFrame(historical_data)
 def main():
     args = parse_arguments()
 
@@ -85,8 +71,8 @@ def main():
 
     # Filter cryptocurrencies based on market cap and price change
     filtered_crypto_df = filter_crypto(top_crypto_df, min_market_cap=args.min_market_cap, max_market_cap=args.max_market_cap,
-                                       min_24h_change=args.min_24h_change, min_7d_change=args.min_7d_change, min_30d_change=args.min_30d_change,
-                                       exclude=args.exclude, include=args.include)
+                                        min_24h_change=args.min_24h_change, min_7d_change=args.min_7d_change, min_30d_change=args.min_30d_change,
+                                        exclude=args.exclude, include=args.include)
 
     # Export data
     if args.export_format:
@@ -96,16 +82,11 @@ def main():
     if args.price_alert:
         for alert in args.price_alert:
             symbol, target_price, alert_type = alert.split(':')
-            price_alert(filtered_crypto_df, symbol, float(target_price), alert_type)
-
-    # Get historical data
-    if args.historical_data:
-        for coin_id in args.historical_data:
-            historical_data_df = get_historical_data(coin_id, currency=args.currency, days='30', interval='daily')
-            print(historical_data_df)
+            price_alert(filtered_crypto_df, symbol, target_price, alert_type)
 
     # Print the filtered cryptocurrencies
     print(tabulate(filtered_crypto_df, headers='keys', tablefmt='psql', showindex=False))
 
 if __name__ == "__main__":
     main()
+

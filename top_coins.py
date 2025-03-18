@@ -4,8 +4,9 @@ import pandas as pd
 from tabulate import tabulate
 
 
+# Improved argument parsing for better clarity and usability
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Fetch and filter top cryptocurrencies.")
+    parser = argparse.ArgumentParser(description="Fetch, filter, and manage cryptocurrency data.")
     parser.add_argument("-n", "--num", type=int, default=10, help="Number of top cryptocurrencies to fetch.")
     parser.add_argument("-c", "--currency", type=str, default="usd", help="Currency to display the values in.")
     parser.add_argument("-s", "--sort_by", type=str, default="market_cap",
@@ -24,10 +25,15 @@ def parse_arguments():
     return parser.parse_args()
 
 
+# Enhanced data retrieval with error handling and API call robustness
 def get_top_crypto(num, currency, sort_by, categories=None):
-    cg = CoinGeckoAPI()
-    coins = cg.get_coins_markets(vs_currency=currency, order=sort_by, per_page=num,
-                                 page=1, sparkline=False, price_change_percentage='24h,7d,30d')
+    try:
+        cg = CoinGeckoAPI()
+        coins = cg.get_coins_markets(vs_currency=currency, order=sort_by, per_page=num,
+                                     page=1, sparkline=False, price_change_percentage='24h,7d,30d')
+    except Exception as e:
+        print(f"Error fetching data from CoinGecko: {e}")
+        return pd.DataFrame()
 
     df = pd.DataFrame(coins)
 
@@ -44,43 +50,58 @@ def get_top_crypto(num, currency, sort_by, categories=None):
     return df
 
 
+# Streamlined filtering logic with better readability
 def filter_crypto(df, min_market_cap=0, max_market_cap=None, exclude=None, include=None):
-    if min_market_cap:
-        df = df[df['market_cap'] >= min_market_cap]
+    initial_len = len(df)
+    df = df[df['market_cap'] >= min_market_cap]
     if max_market_cap:
         df = df[df['market_cap'] <= max_market_cap]
     if exclude:
         df = df[~df['id'].isin(exclude)]
     if include:
         df = df[df['id'].isin(include)]
+    print(f"Filtered from {initial_len} to {len(df)} cryptocurrencies.")
 
     return df
 
 
+# More informative export messages and file naming conventions
 def export_data(df, export_format):
     filename = f'crypto_data.{export_format}'
-    if export_format == 'csv':
-        df.to_csv(filename, index=False)
-    elif export_format == 'json':
-        df.to_json(filename, orient='records', indent=2)
-    elif export_format == 'excel':
-        df.to_excel(filename, index=False)
-    print(f'Data exported to {filename}')
+    try:
+        if export_format == 'csv':
+            df.to_csv(filename, index=False)
+        elif export_format == 'json':
+            df.to_json(filename, orient='records', indent=2)
+        elif export_format == 'excel':
+            df.to_excel(filename, index=False)
+        print(f'Successfully exported data to {filename}.')
+    except Exception as e:
+        print(f"Error exporting data: {e}")
 
 
+# Enhanced alert handling with better feedback and error checking
 def price_alert(df, symbol, target_price, alert_type='above'):
-    target_price = float(target_price)
-    coin = df[df['symbol'] == symbol.upper()]
-    if not coin.empty:
-        price = coin.iloc[0]['price']
-        if (alert_type == 'above' and price >= target_price) or (alert_type == 'below' and price <= target_price):
-            print(f"[ALERT] {symbol.upper()} is {alert_type} {target_price} ({price})")
+    try:
+        target_price = float(target_price)
+        coin = df[df['symbol'] == symbol.upper()]
+        if not coin.empty:
+            price = coin.iloc[0]['price']
+            if (alert_type == 'above' and price >= target_price) or (alert_type == 'below' and price <= target_price):
+                print(f"[ALERT] {symbol.upper()} price is {price}, which is {alert_type} {target_price}")
+    except ValueError:
+        print(f"Invalid target price provided for alert on {symbol.upper()}.")
 
 
+# Main execution flow clearly defined
 def main():
     args = parse_arguments()
 
     df_crypto = get_top_crypto(args.num, args.currency, args.sort_by, args.categories)
+
+    if df_crypto.empty:
+        print("No data fetched. Exiting.")
+        return
 
     df_crypto = filter_crypto(df_crypto, min_market_cap=args.min_market_cap,
                               max_market_cap=args.max_market_cap,
@@ -91,11 +112,11 @@ def main():
 
     if args.price_alert:
         for alert in args.price_alert:
-            try:
+            if ':' in alert:
                 symbol, target_price, alert_type = alert.split(':')
                 price_alert(df_crypto, symbol, target_price, alert_type)
-            except ValueError:
-                print("Invalid price alert format. Use 'symbol:target_price:above|below'")
+            else:
+                print("Invalid alert format. Use 'symbol:target_price:above|below'")
 
     print(tabulate(df_crypto, headers='keys', tablefmt='psql', showindex=False))
 

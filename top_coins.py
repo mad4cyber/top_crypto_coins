@@ -77,6 +77,48 @@ def filter_crypto(df, min_market_cap=0, max_market_cap=None, exclude=None, inclu
     return df
 
 
+# Support exporting the filtered data in different formats
+def export_data(df, export_format, filename="top_coins"):
+    """Export DataFrame `df` to the given format."""
+    try:
+        if export_format == "csv":
+            df.to_csv(f"{filename}.csv", index=False)
+        elif export_format == "json":
+            df.to_json(f"{filename}.json", orient="records")
+        elif export_format == "excel":
+            df.to_excel(f"{filename}.xlsx", index=False)
+        else:
+            print(f"Unsupported export format: {export_format}")
+            return
+        print(f"Data exported to {filename}.{export_format if export_format != 'excel' else 'xlsx'}")
+    except Exception as e:
+        print(f"Failed to export data: {e}")
+
+
+# Simple price alert mechanism
+def price_alert(df, symbol, target_price, alert_type):
+    """Check if the price of `symbol` crosses `target_price`."""
+    symbol = symbol.upper()
+    try:
+        target = float(target_price)
+    except ValueError:
+        print(f"Invalid target price: {target_price}")
+        return
+
+    if symbol not in df['symbol'].values:
+        print(f"Symbol {symbol} not found in the data.")
+        return
+
+    current_price = float(df.loc[df['symbol'] == symbol, 'price'].iloc[0])
+
+    if alert_type == 'above' and current_price >= target:
+        print(f"ALERT: {symbol} price {current_price} is above {target}.")
+    elif alert_type == 'below' and current_price <= target:
+        print(f"ALERT: {symbol} price {current_price} is below {target}.")
+    else:
+        print(f"No alert for {symbol}. Current price: {current_price}.")
+
+
 # Main execution
 def main():
     args = parse_arguments()

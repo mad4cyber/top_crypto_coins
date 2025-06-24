@@ -1,0 +1,12 @@
+{
+  "total_sessions": 7,
+  "total_trades": 3,
+  "successful_trades": 3,
+  "failed_trades": 4,
+  "total_pnl": 4.1565397286906975,
+  "best_trade": 1.3895008577108328,
+  "worst_trade": 0.0,
+  "daily_sessions": {
+    "2025-06-24": 7
+  }
+}

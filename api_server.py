@@ -21,6 +21,10 @@ import uvicorn
 
 from pycoingecko import CoinGeckoAPI
 from crypto_analyzer import CryptoAnalyzer, PortfolioManager
+from binance.client import Client
+import config
+from week1_training import Week1Training
+from trading_parameters import TradingParameters
 
 # FastAPI App initialisieren
 app = FastAPI(
@@ -44,6 +48,19 @@ app.add_middleware(
 analyzer = CryptoAnalyzer()
 portfolio_manager = PortfolioManager()
 cg = CoinGeckoAPI()
+
+# Trading-Bot Instanzen
+try:
+    binance_client = Client(
+        api_key=config.BINANCE_TESTNET_API_KEY,
+        api_secret=config.BINANCE_TESTNET_SECRET,
+        testnet=True
+    )
+    trading_bot = Week1Training()
+except Exception as e:
+    print(f"⚠️ Trading-Bot konnte nicht initialisiert werden: {e}")
+    binance_client = None
+    trading_bot = None
 
 # Cache für bessere Performance
 cache = {}
@@ -380,10 +397,90 @@ async def websocket_endpoint(websocket):
     except Exception as e:
         print(f"WebSocket Fehler: {e}")
 
+# Trading-Bot API Endpoints
+@app.get("/api/trading-status")
+async def get_trading_status():
+    """Trading-Bot Status abrufen"""
+    if not trading_bot:
+        return {"error": "Trading-Bot nicht verfügbar"}
+    
+    try:
+        balance = trading_bot.get_balance()
+        stats = trading_bot.training_stats
+        
+        # Aktuelle Positionen abrufen
+        account = binance_client.get_account() if binance_client else None
+        positions = []
+        
+        if account:
+            for balance_item in account['balances']:
+                if float(balance_item['free']) > 0 and balance_item['asset'] in ['BTC', 'ETH', 'BNB', 'SOL', 'ADA']:
+                    # Aktuellen Preis abrufen
+                    try:
+                        ticker = binance_client.get_symbol_ticker(symbol=f"{balance_item['asset']}USDT")
+                        current_price = float(ticker['price'])
+                        value_usd = float(balance_item['free']) * current_price
+                        
+                        positions.append({
+                            'symbol': balance_item['asset'],
+                            'amount': float(balance_item['free']),
+                            'current_price': current_price,
+                            'value_usd': value_usd
+                        })
+                    except:
+                        pass
+        
+        return {
+            "status": "Aktiv",
+            "balance_usdt": balance,
+            "total_trades": stats['total_trades'],
+            "successful_trades": stats['successful_trades'],
+            "success_rate": (stats['successful_trades'] / max(1, stats['total_trades'])) * 100,
+            "total_pnl": stats['total_pnl'],
+            "positions": positions,
+            "last_update": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Fehler beim Abrufen des Trading-Status: {str(e)}"}
+
+@app.get("/api/recent-trades")
+async def get_recent_trades():
+    """Letzte Trades abrufen"""
+    if not binance_client:
+        return {"error": "Binance-Client nicht verfügbar"}
+    
+    try:
+        # Letzte Trades für die wichtigsten Symbole
+        trades = []
+        symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ADAUSDT']
+        
+        for symbol in symbols:
+            try:
+                recent_trades = binance_client.get_my_trades(symbol=symbol, limit=5)
+                for trade in recent_trades:
+                    trades.append({
+                        'symbol': symbol,
+                        'side': 'BUY' if trade['isBuyer'] else 'SELL',
+                        'quantity': float(trade['qty']),
+                        'price': float(trade['price']),
+                        'timestamp': trade['time'],
+                        'commission': float(trade['commission'])
+                    })
+            except:
+                pass
+        
+        # Nach Zeitstempel sortieren (neueste zuerst)
+        trades.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        return trades[:10]  # Top 10 neueste Trades
+    except Exception as e:
+        return {"error": f"Fehler beim Abrufen der Trades: {str(e)}"}
+
 if __name__ == "__main__":
-    print("🚀 Starte Krypto-Analyse Web-Server...")
+    print("🚀 Starte Krypto-Analyse Web-Server mit Trading-Bot...")
     print("🌐 Dashboard: http://localhost:8000")
     print("📖 API Docs: http://localhost:8000/docs")
+    print("🤖 Trading-Bot integriert")
     
     uvicorn.run(
         "api_server:app",

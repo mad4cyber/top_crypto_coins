@@ -1,0 +1,51 @@
+# Kryptowährungs-Analyse Konfiguration
+
+# Standard-Einstellungen
+defaults:
+  currency: "eur"
+  language: "de"
+  num_coins: 10
+  sort_by: "market_cap"
+  table_format: "grid"
+
+# API-Einstellungen
+api:
+  coingecko:
+    base_url: "https://api.coingecko.com/api/v3"
+    rate_limit: 10  # Anfragen pro Minute
+    timeout: 30
+    retries: 3
+
+# Export-Einstellungen
+export:
+  directory: "exports"
+  filename_prefix: "crypto_data"
+  formats:
+    - csv
+    - json
+    - excel
+
+# Anzeige-Einstellungen
+display:
+  currencies:
+    eur: "€"
+    usd: "$"
+    gbp: "£"
+    chf: "CHF"
+  
+  # Farben für Preisänderungen
+  colors:
+    positive: "green"
+    negative: "red"
+    neutral: "yellow"
+
+# Portfolio-Einstellungen
+portfolio:
+  file: "portfolio.json"
+  alerts_file: "alerts.json"
+
+# Logging
+logging:
+  level: "INFO"
+  file: "crypto_analyzer.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

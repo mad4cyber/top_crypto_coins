@@ -1,0 +1,19 @@
+{
+  "holdings": {
+    "BTC": [
+      {
+        "amount": 0.1,
+        "purchase_price": 85000.0,
+        "date": "2025-06-24T13:26:49.192260"
+      }
+    ],
+    "ETH": [
+      {
+        "amount": 2.0,
+        "purchase_price": 2500.0,
+        "date": "2025-06-24T13:26:56.538591"
+      }
+    ]
+  },
+  "alerts": []
+}

@@ -247,7 +247,7 @@ class SimpleTradingBot:
 
 async def main():
     """🚀 Hauptfunktion"""
-    bot = SimpleTradingBot(initial_balance=10000)
+    bot = SimpleTradingBot(balance=10000)
     
     print("🤖 Simple AI Trading Bot")
     print("💰 Startkapital: €10,000")

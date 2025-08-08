@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Crypto AI Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .hero-section {
+            padding: 100px 0;
+            color: white;
+            text-align: center;
+        }
+        .prediction-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin: 20px 0;
+        }
+        .prediction-result {
+            display: none;
+            margin-top: 20px;
+        }
+        .loading {
+            display: none;
+        }
+        .price-change.positive {
+            color: #28a745;
+        }
+        .price-change.negative {
+            color: #dc3545;
+        }
+        .confidence-bar {
+            height: 10px;
+            border-radius: 5px;
+            background: #e9ecef;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffc107 0%, #28a745 100%);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Multi-Coin Analysis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-robot"></i> AI-Powered Crypto Predictions
+            </h1>
+            <p class="lead">Nutze Machine Learning für präzise Kryptowährungs-Prognosen</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="prediction-card p-4">
+                    <h3 class="text-center mb-4">
+                        <i class="fas fa-chart-line text-primary"></i> 
+                        AI-Prognose erstellen
+                    </h3>
+                    
+                    <!-- Coin Selection -->
+                    <div class="mb-3">
+                        <label for="coinSelect" class="form-label">Kryptowährung auswählen:</label>
+                        <select id="coinSelect" class="form-select">
+                            <option value="">-- Coin auswählen --</option>
+                            <option value="bitcoin">Bitcoin (BTC)</option>
+                            <option value="ethereum">Ethereum (ETH)</option>
+                            <option value="tether">Tether (USDT)</option>
+                            <option value="binancecoin">Binance Coin (BNB)</option>
+                            <option value="solana">Solana (SOL)</option>
+                            <option value="ripple">Ripple (XRP)</option>
+                            <option value="usd-coin">USD Coin (USDC)</option>
+                            <option value="staked-ether">Lido Staked Ether (stETH)</option>
+                            <option value="dogecoin">Dogecoin (DOGE)</option>
+                            <option value="cardano">Cardano (ADA)</option>
+                            <option value="tron">TRON (TRX)</option>
+                            <option value="shiba-inu">Shiba Inu (SHIB)</option>
+                            <option value="avalanche-2">Avalanche (AVAX)</option>
+                            <option value="chainlink">Chainlink (LINK)</option>
+                            <option value="polygon">Polygon (MATIC)</option>
+                        </select>
+                    </div>
+
+                    <!-- Predict Button -->
+                    <div class="text-center mb-3">
+                        <button id="predictBtn" class="btn btn-primary btn-lg" disabled>
+                            <i class="fas fa-magic"></i> AI-Prognose erstellen
+                        </button>
+                    </div>
+
+                    <!-- Loading -->
+                    <div class="loading text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Analysiere...</span>
+                        </div>
+                        <p class="mt-2">🧠 AI analysiert historische Daten...</p>
+                    </div>
+
+                    <!-- Prediction Result -->
+                    <div class="prediction-result">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="text-center p-3 border rounded">
+                                    <h5>Aktueller Preis</h5>
+                                    <div id="currentPrice" class="h4 text-muted">--</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-center p-3 border rounded">
+                                    <h5>24h Prognose</h5>
+                                    <div id="predictedPrice" class="h4">--</div>
+                                    <div id="priceChange" class="price-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h6>AI-Konfidenz:</h6>
+                            <div class="confidence-bar">
+                                <div id="confidenceFill" class="confidence-fill" style="width: 0%"></div>
+                            </div>
+                            <div id="confidenceText" class="text-center mt-1">0%</div>
+                        </div>
+
+                        <!-- Model Performance -->
+                        <div class="mt-4">
+                            <h6>Modell-Performance:</h6>
+                            <div id="modelPerformance"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row mt-5">
+            <div class="col-md-4 text-center text-white">
+                <i class="fas fa-brain fa-3x mb-3"></i>
+                <h5>Machine Learning</h5>
+                <p>Multiple AI-Modelle für präzise Prognosen</p>
+            </div>
+            <div class="col-md-4 text-center text-white">
+                <i class="fas fa-chart-area fa-3x mb-3"></i>
+                <h5>Technische Analyse</h5>
+                <p>RSI, MACD, Bollinger Bands und mehr</p>
+            </div>
+            <div class="col-md-4 text-center text-white">
+                <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                <h5>Risk Management</h5>
+                <p>Konfidenz-basierte Empfehlungen</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const coinSelect = document.getElementById('coinSelect');
+        const predictBtn = document.getElementById('predictBtn');
+        const loading = document.querySelector('.loading');
+        const predictionResult = document.querySelector('.prediction-result');
+
+        // Enable predict button when coin is selected
+        coinSelect.addEventListener('change', function() {
+            predictBtn.disabled = this.value === '';
+        });
+
+        // Predict button click handler
+        predictBtn.addEventListener('click', async function() {
+            const coinId = coinSelect.value;
+            if (!coinId) return;
+
+            // Show loading
+            loading.style.display = 'block';
+            predictionResult.style.display = 'none';
+            predictBtn.disabled = true;
+
+            try {
+                // Fetch prediction from API
+                const response = await fetch(`/api/predict/${coinId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Fehler: ' + data.error);
+                    return;
+                }
+
+                // Update UI with prediction data
+                displayPrediction(data);
+
+            } catch (error) {
+                alert('Fehler beim Abrufen der Prognose: ' + error.message);
+            } finally {
+                // Hide loading
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        });
+
+        function displayPrediction(data) {
+            // Current and predicted prices
+            document.getElementById('currentPrice').textContent = 
+                `€${data.current_price.toFixed(2)}`;
+            document.getElementById('predictedPrice').textContent = 
+                `€${data.predicted_price.toFixed(2)}`;
+
+            // Price change
+            const changeElement = document.getElementById('priceChange');
+            const change = data.price_change_pct;
+            changeElement.textContent = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+            changeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+
+            // Confidence
+            const confidence = data.confidence * 100;
+            document.getElementById('confidenceFill').style.width = `${confidence}%`;
+            document.getElementById('confidenceText').textContent = `${confidence.toFixed(1)}%`;
+
+            // Model performance
+            const perfContainer = document.getElementById('modelPerformance');
+            let perfHtml = '<div class="row">';
+            
+            for (const [model, perf] of Object.entries(data.model_performance)) {
+                const r2Score = (perf.r2 * 100).toFixed(1);
+                perfHtml += `
+                    <div class="col-md-6 mb-2">
+                        <small>
+                            <strong>${model.replace('_', ' ').toUpperCase()}:</strong> 
+                            R² ${r2Score}%
+                        </small>
+                    </div>
+                `;
+            }
+            
+            perfHtml += '</div>';
+            perfContainer.innerHTML = perfHtml;
+
+            // Show result
+            predictionResult.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

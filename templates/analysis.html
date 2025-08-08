@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 Multi-Coin Analysis - Crypto AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .analysis-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+        .portfolio-card {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border-radius: 10px;
+        }
+        .market-card {
+            background: linear-gradient(45deg, #6f42c1, #e83e8c);
+            color: white;
+            border-radius: 10px;
+        }
+        .winner-card {
+            background: linear-gradient(45deg, #28a745, #198754);
+            color: white;
+            border-radius: 10px;
+        }
+        .loser-card {
+            background: linear-gradient(45deg, #dc3545, #b02a37);
+            color: white;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link active" href="/analysis">Multi-Coin Analysis</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="analysis-card p-4 text-center">
+                    <h2><i class="fas fa-chart-area text-primary"></i> Multi-Coin AI Analysis</h2>
+                    <p class="text-muted">Comprehensive market analysis with AI-powered insights</p>
+                    <button id="analyzeBtn" class="btn btn-primary btn-lg mt-2">
+                        <i class="fas fa-play"></i> Analyse starten
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center mt-5" style="display: none;">
+            <div class="spinner-border text-light" style="width: 4rem; height: 4rem;" role="status">
+                <span class="visually-hidden">Analysiere...</span>
+            </div>
+            <p class="text-light mt-3 h5">🧠 AI analysiert mehrere Kryptowährungen...</p>
+            <p class="text-light">Dies kann einige Minuten dauern</p>
+        </div>
+
+        <!-- Analysis Results -->
+        <div id="analysisResults" style="display: none;">
+            <!-- Summary Cards -->
+            <div class="row" id="summaryCards">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="analysis-card p-4">
+                        <h5><i class="fas fa-chart-bar text-info"></i> Prognose-Vergleich</h5>
+                        <canvas id="comparisonChart" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="analysis-card p-4">
+                        <h5><i class="fas fa-pie-chart text-warning"></i> Portfolio-Verteilung</h5>
+                        <canvas id="portfolioChart" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="row" id="recommendations">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <!-- Detailed Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="analysis-card p-4">
+                        <h5><i class="fas fa-table text-success"></i> Detaillierte Ergebnisse</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Rang</th>
+                                        <th>Coin</th>
+                                        <th>Aktueller Preis</th>
+                                        <th>24h Prognose</th>
+                                        <th>Erwartete Änderung</th>
+                                        <th>AI-Konfidenz</th>
+                                        <th>Beste Modell</th>
+                                        <th>Trading Signal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultsTable">
+                                    <!-- Will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let comparisonChart = null;
+        let portfolioChart = null;
+
+        // Analyze button click handler
+        document.getElementById('analyzeBtn').addEventListener('click', function() {
+            runAnalysis();
+        });
+
+        async function runAnalysis() {
+            const loadingState = document.getElementById('loadingState');
+            const analysisResults = document.getElementById('analysisResults');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            // Show loading
+            loadingState.style.display = 'block';
+            analysisResults.style.display = 'none';
+            analyzeBtn.disabled = true;
+
+            try {
+                // Fetch multi-coin analysis
+                const response = await fetch('/api/multi-analysis');
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+
+                // Display results
+                displayAnalysisResults(data);
+
+            } catch (error) {
+                alert('Fehler bei der Analyse: ' + error.message);
+            } finally {
+                // Hide loading
+                loadingState.style.display = 'none';
+                analysisResults.style.display = 'block';
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function displayAnalysisResults(data) {
+            const results = data.results;
+            
+            // Update summary cards
+            updateSummaryCards(results);
+            
+            // Update charts
+            updateComparisonChart(results);
+            updatePortfolioChart(results);
+            
+            // Update recommendations
+            updateRecommendations(results);
+            
+            // Update detailed table
+            updateResultsTable(results);
+        }
+
+        function updateSummaryCards(results) {
+            const container = document.getElementById('summaryCards');
+            const coins = Object.values(results);
+            
+            const totalCoins = coins.length;
+            const avgChange = coins.reduce((sum, coin) => sum + coin.price_change_pct, 0) / totalCoins;
+            const avgConfidence = coins.reduce((sum, coin) => sum + coin.confidence, 0) / totalCoins;
+            const positiveCount = coins.filter(coin => coin.price_change_pct > 0).length;
+
+            container.innerHTML = `
+                <div class="col-md-3 mb-3">
+                    <div class="market-card p-4 text-center">
+                        <h3>${totalCoins}</h3>
+                        <p class="mb-0">Analysierte Coins</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="market-card p-4 text-center">
+                        <h3>${avgChange > 0 ? '+' : ''}${avgChange.toFixed(2)}%</h3>
+                        <p class="mb-0">Ø Marktprognose</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="market-card p-4 text-center">
+                        <h3>${(avgConfidence * 100).toFixed(1)}%</h3>
+                        <p class="mb-0">Ø AI-Konfidenz</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="market-card p-4 text-center">
+                        <h3>${positiveCount}/${totalCoins}</h3>
+                        <p class="mb-0">Bullish Prognosen</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateComparisonChart(results) {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            
+            if (comparisonChart) {
+                comparisonChart.destroy();
+            }
+
+            const sortedResults = Object.entries(results)
+                .sort((a, b) => b[1].price_change_pct - a[1].price_change_pct);
+
+            const labels = sortedResults.map(([coin]) => coin.toUpperCase());
+            const changes = sortedResults.map(([, data]) => data.price_change_pct);
+            const confidences = sortedResults.map(([, data]) => data.confidence * 100);
+
+            comparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Erwartete Änderung (%)',
+                        data: changes,
+                        backgroundColor: changes.map(change => 
+                            change >= 5 ? 'rgba(40, 167, 69, 0.8)' :
+                            change >= 2 ? 'rgba(255, 193, 7, 0.8)' :
+                            change >= -2 ? 'rgba(108, 117, 125, 0.8)' :
+                            change >= -5 ? 'rgba(253, 126, 20, 0.8)' :
+                            'rgba(220, 53, 69, 0.8)'
+                        ),
+                        borderColor: changes.map(change => 
+                            change >= 5 ? 'rgba(40, 167, 69, 1)' :
+                            change >= 2 ? 'rgba(255, 193, 7, 1)' :
+                            change >= -2 ? 'rgba(108, 117, 125, 1)' :
+                            change >= -5 ? 'rgba(253, 126, 20, 1)' :
+                            'rgba(220, 53, 69, 1)'
+                        ),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const index = context.dataIndex;
+                                    return `Konfidenz: ${confidences[index].toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePortfolioChart(results) {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            
+            if (portfolioChart) {
+                portfolioChart.destroy();
+            }
+
+            // Calculate portfolio weights based on positive predictions and confidence
+            const portfolioWeights = {};
+            const totalConfidence = Object.values(results).reduce((sum, data) => sum + data.confidence, 0);
+
+            for (const [coin, data] of Object.entries(results)) {
+                if (data.price_change_pct > 0) {
+                    const weight = (data.confidence / totalConfidence) * (1 + data.price_change_pct / 100);
+                    portfolioWeights[coin] = weight;
+                }
+            }
+
+            // Normalize to 100%
+            const totalWeight = Object.values(portfolioWeights).reduce((sum, weight) => sum + weight, 0);
+            const normalizedWeights = {};
+            for (const [coin, weight] of Object.entries(portfolioWeights)) {
+                normalizedWeights[coin] = (weight / totalWeight) * 100;
+            }
+
+            const sortedWeights = Object.entries(normalizedWeights)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6); // Top 6
+
+            const labels = sortedWeights.map(([coin]) => coin.toUpperCase());
+            const data = sortedWeights.map(([, weight]) => weight);
+            const colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+            ];
+
+            portfolioChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, data.length),
+                        borderColor: colors.slice(0, data.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRecommendations(results) {
+            const container = document.getElementById('recommendations');
+            
+            // Top winners
+            const winners = Object.entries(results)
+                .filter(([, data]) => data.price_change_pct > 0)
+                .sort((a, b) => b[1].price_change_pct - a[1].price_change_pct)
+                .slice(0, 3);
+
+            // Top losers
+            const losers = Object.entries(results)
+                .filter(([, data]) => data.price_change_pct < 0)
+                .sort((a, b) => a[1].price_change_pct - b[1].price_change_pct)
+                .slice(0, 3);
+
+            let html = '';
+
+            // Winners card
+            if (winners.length > 0) {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="winner-card p-4">
+                            <h5><i class="fas fa-trophy"></i> Top Gewinner</h5>
+                            <ul class="list-unstyled mb-0">
+                `;
+                winners.forEach(([coin, data], index) => {
+                    html += `
+                        <li class="mb-2">
+                            <strong>${index + 1}. ${coin.toUpperCase()}</strong>: 
+                            +${data.price_change_pct.toFixed(2)}% 
+                            <small>(${(data.confidence * 100).toFixed(1)}% Konfidenz)</small>
+                        </li>
+                    `;
+                });
+                html += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Losers card
+            if (losers.length > 0) {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="loser-card p-4">
+                            <h5><i class="fas fa-chart-line-down"></i> Größte Verluste</h5>
+                            <ul class="list-unstyled mb-0">
+                `;
+                losers.forEach(([coin, data], index) => {
+                    html += `
+                        <li class="mb-2">
+                            <strong>${index + 1}. ${coin.toUpperCase()}</strong>: 
+                            ${data.price_change_pct.toFixed(2)}% 
+                            <small>(${(data.confidence * 100).toFixed(1)}% Konfidenz)</small>
+                        </li>
+                    `;
+                });
+                html += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updateResultsTable(results) {
+            const tbody = document.getElementById('resultsTable');
+            const sortedResults = Object.entries(results)
+                .sort((a, b) => b[1].price_change_pct - a[1].price_change_pct);
+
+            let html = '';
+            sortedResults.forEach(([coin, data], index) => {
+                const change = data.price_change_pct;
+                const confidence = data.confidence;
+
+                // Find best model
+                const bestModel = Object.entries(data.model_performance)
+                    .sort((a, b) => b[1].r2 - a[1].r2)[0][0];
+
+                // Determine signal
+                let signal = '';
+                let signalClass = '';
+                if (change > 5) {
+                    signal = '🚀 STRONG BUY';
+                    signalClass = 'text-success fw-bold';
+                } else if (change > 2) {
+                    signal = '🟢 BUY';
+                    signalClass = 'text-success';
+                } else if (change > -2) {
+                    signal = '⚪ HOLD';
+                    signalClass = 'text-muted';
+                } else if (change > -5) {
+                    signal = '🟠 SELL';
+                    signalClass = 'text-warning';
+                } else {
+                    signal = '🔴 STRONG SELL';
+                    signalClass = 'text-danger fw-bold';
+                }
+
+                html += `
+                    <tr>
+                        <td><strong>#${index + 1}</strong></td>
+                        <td><strong>${coin.toUpperCase()}</strong></td>
+                        <td>€${data.current_price.toFixed(2)}</td>
+                        <td>€${data.predicted_price.toFixed(2)}</td>
+                        <td class="${change >= 0 ? 'text-success' : 'text-danger'}">
+                            <strong>${change > 0 ? '+' : ''}${change.toFixed(2)}%</strong>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-info" style="width: ${confidence * 100}%">
+                                    ${(confidence * 100).toFixed(1)}%
+                                </div>
+                            </div>
+                        </td>
+                        <td><small>${bestModel.replace('_', ' ').toUpperCase()}</small></td>
+                        <td class="${signalClass}">${signal}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

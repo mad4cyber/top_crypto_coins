@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Portfolio Manager - Crypto AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .portfolio-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .position-row {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .position-row:last-child {
+            border-bottom: none;
+        }
+        .pnl-positive { color: #28a745; }
+        .pnl-negative { color: #dc3545; }
+        .risk-low { color: #28a745; }
+        .risk-medium { color: #ffc107; }
+        .risk-high { color: #dc3545; }
+        .allocation-bar {
+            height: 20px;
+            border-radius: 10px;
+            background: #e9ecef;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        .allocation-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        .loading-spinner {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Analysis</a>
+                <a class="nav-link" href="/charts">Charts</a>
+                <a class="nav-link active" href="/portfolio">Portfolio</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="portfolio-card p-4 text-center">
+                    <h2><i class="fas fa-briefcase text-primary"></i> Portfolio Manager</h2>
+                    <p class="text-muted">AI-powered portfolio tracking and risk management</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio Overview -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <h6 class="text-muted">Total Portfolio Value</h6>
+                    <div id="totalValue" class="h4 text-primary">€--</div>
+                    <small id="totalPnL" class="text-muted">--</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <h6 class="text-muted">Cash Balance</h6>
+                    <div id="cashBalance" class="h4 text-success">€--</div>
+                    <small class="text-muted">Available for trading</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <h6 class="text-muted">Active Positions</h6>
+                    <div id="positionCount" class="h4 text-info">--</div>
+                    <small id="winRate" class="text-muted">-- Win Rate</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <h6 class="text-muted">Risk Level</h6>
+                    <div id="riskLevel" class="h4">--</div>
+                    <small id="riskDescription" class="text-muted">--</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="portfolio-card p-3">
+                    <h6><i class="fas fa-lightning-bolt text-warning"></i> Quick Actions</h6>
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPositionModal">
+                            <i class="fas fa-plus"></i> Add Position
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="refreshPortfolio()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="showPositionSuggestion()">
+                            <i class="fas fa-robot"></i> AI Suggestion
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Positions Table -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="portfolio-card p-3">
+                    <h6><i class="fas fa-coins text-warning"></i> Current Positions</h6>
+                    
+                    <div class="loading-spinner text-center" id="positionsLoading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading positions...
+                    </div>
+
+                    <div id="positionsContainer">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Asset</th>
+                                        <th>Quantity</th>
+                                        <th>Entry Price</th>
+                                        <th>Current Price</th>
+                                        <th>Value</th>
+                                        <th>P&L</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="positionsTable">
+                                    <!-- Positions will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asset Allocation -->
+            <div class="col-lg-4">
+                <div class="portfolio-card p-3 mb-3">
+                    <h6><i class="fas fa-chart-pie text-info"></i> Asset Allocation</h6>
+                    <div id="allocationContainer">
+                        <!-- Allocation bars will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="portfolio-card p-3">
+                    <h6><i class="fas fa-chart-line text-success"></i> Performance</h6>
+                    <div id="performanceMetrics">
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <div id="bestPosition" class="text-success">--</div>
+                                <small class="text-muted">Best Position</small>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div id="worstPosition" class="text-danger">--</div>
+                                <small class="text-muted">Worst Position</small>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <div id="avgHoldTime" class="text-info">--</div>
+                                <small class="text-muted">Avg Hold Time</small>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div id="totalReturn" class="text-primary">--</div>
+                                <small class="text-muted">Total Return</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="row">
+            <div class="col-12">
+                <div class="portfolio-card p-3">
+                    <h6><i class="fas fa-shield-alt text-danger"></i> Risk Assessment & Recommendations</h6>
+                    <div id="riskAssessment">
+                        <!-- Risk metrics will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Position Modal -->
+    <div class="modal fade" id="addPositionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">💰 Add New Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPositionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Cryptocurrency</label>
+                            <select id="positionCoin" class="form-select" required>
+                                <option value="">-- Select Coin --</option>
+                                <option value="bitcoin">Bitcoin (BTC)</option>
+                                <option value="ethereum">Ethereum (ETH)</option>
+                                <option value="binancecoin">Binance Coin (BNB)</option>
+                                <option value="ripple">Ripple (XRP)</option>
+                                <option value="solana">Solana (SOL)</option>
+                                <option value="cardano">Cardano (ADA)</option>
+                                <option value="dogecoin">Dogecoin (DOGE)</option>
+                                <option value="polygon">Polygon (MATIC)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Entry Price (EUR)</label>
+                            <input type="number" id="entryPrice" class="form-control" step="0.0001" required>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-1" onclick="getCurrentPrice()">
+                                Get Current Price
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" id="quantity" class="form-control" step="0.000001" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional)</label>
+                            <input type="text" id="positionNotes" class="form-control" placeholder="Entry reason...">
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>AI Suggestion will be shown here</strong>
+                            <div id="aiSuggestion">Select a coin to see AI recommendation</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addPosition()">Add Position</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPortfolioData = null;
+        
+        // Load portfolio on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshPortfolio();
+        });
+
+        async function refreshPortfolio() {
+            document.getElementById('positionsLoading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/portfolio/Main Portfolio');
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                currentPortfolioData = data;
+                displayPortfolioData(data);
+
+            } catch (error) {
+                console.error('Portfolio load error:', error);
+                alert('Failed to load portfolio: ' + error.message);
+            } finally {
+                document.getElementById('positionsLoading').style.display = 'none';
+            }
+        }
+
+        function displayPortfolioData(data) {
+            const summary = data.summary;
+            const positions = data.positions;
+            const allocation = data.allocation;
+            const performance = data.performance_metrics;
+
+            // Overview metrics
+            document.getElementById('totalValue').textContent = `€${summary.total_portfolio_value.toFixed(2)}`;
+            document.getElementById('cashBalance').textContent = `€${summary.cash_balance.toFixed(2)}`;
+            document.getElementById('positionCount').textContent = summary.position_count;
+            
+            const totalPnL = document.getElementById('totalPnL');
+            totalPnL.textContent = `€${summary.total_pnl.toFixed(2)} (${summary.total_pnl_pct.toFixed(2)}%)`;
+            totalPnL.className = summary.total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+
+            // Win rate
+            if (performance.win_rate !== undefined) {
+                document.getElementById('winRate').textContent = `${performance.win_rate.toFixed(1)}% Win Rate`;
+            }
+
+            // Positions table
+            displayPositionsTable(positions);
+            
+            // Asset allocation
+            displayAllocation(allocation);
+            
+            // Performance metrics
+            displayPerformanceMetrics(performance);
+        }
+
+        function displayPositionsTable(positions) {
+            const tbody = document.getElementById('positionsTable');
+            tbody.innerHTML = '';
+
+            if (positions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No positions yet</td></tr>';
+                return;
+            }
+
+            positions.forEach(position => {
+                const pnlClass = position.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                
+                const row = `
+                    <tr>
+                        <td>
+                            <strong>${position.coin_symbol}</strong><br>
+                            <small class="text-muted">${position.coin_id}</small>
+                        </td>
+                        <td>${position.quantity.toFixed(6)}</td>
+                        <td>€${position.entry_price.toFixed(4)}</td>
+                        <td>€${position.current_price.toFixed(4)}</td>
+                        <td>€${position.current_value.toFixed(2)}</td>
+                        <td class="${pnlClass}">
+                            €${position.pnl.toFixed(2)}<br>
+                            <small>(${position.pnl_pct.toFixed(2)}%)</small>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="sellPosition('${position.coin_id}')">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function displayAllocation(allocation) {
+            const container = document.getElementById('allocationContainer');
+            container.innerHTML = '';
+
+            const colors = {
+                'BTC': '#f7931a',
+                'ETH': '#627eea', 
+                'BNB': '#f0b90b',
+                'XRP': '#00aae4',
+                'SOL': '#9945ff',
+                'ADA': '#0033ad',
+                'DOGE': '#c2a633',
+                'MATIC': '#8247e5',
+                'CASH': '#28a745'
+            };
+
+            Object.entries(allocation).forEach(([symbol, percentage]) => {
+                if (percentage > 0.1) { // Only show if > 0.1%
+                    const color = colors[symbol] || '#6c757d';
+                    
+                    const allocationItem = `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><strong>${symbol}</strong></span>
+                            <span>${percentage.toFixed(1)}%</span>
+                        </div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill" style="width: ${percentage}%; background-color: ${color};"></div>
+                        </div>
+                    `;
+                    container.innerHTML += allocationItem;
+                }
+            });
+        }
+
+        function displayPerformanceMetrics(performance) {
+            if (performance.best_position) {
+                document.getElementById('bestPosition').textContent = 
+                    `${performance.best_position.symbol} +${performance.best_position.pnl_pct.toFixed(1)}%`;
+            }
+            
+            if (performance.worst_position) {
+                document.getElementById('worstPosition').textContent = 
+                    `${performance.worst_position.symbol} ${performance.worst_position.pnl_pct.toFixed(1)}%`;
+            }
+            
+            if (performance.avg_hold_time_days !== undefined) {
+                document.getElementById('avgHoldTime').textContent = 
+                    `${Math.round(performance.avg_hold_time_days)} days`;
+            }
+        }
+
+        async function getCurrentPrice() {
+            const coinId = document.getElementById('positionCoin').value;
+            if (!coinId) {
+                alert('Please select a cryptocurrency first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/predict/${coinId}`);
+                const data = await response.json();
+                
+                if (data.current_price) {
+                    document.getElementById('entryPrice').value = data.current_price.toFixed(4);
+                }
+            } catch (error) {
+                console.error('Price fetch error:', error);
+            }
+        }
+
+        // Position coin selection change - show AI suggestion
+        document.getElementById('positionCoin').addEventListener('change', async function() {
+            const coinId = this.value;
+            if (!coinId) return;
+
+            const suggestionDiv = document.getElementById('aiSuggestion');
+            suggestionDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting AI suggestion...';
+
+            try {
+                const response = await fetch(`/api/portfolio/suggest/Main Portfolio/${coinId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    suggestionDiv.innerHTML = `<div class="text-danger">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                const rec = data.recommendation;
+                const risk = data.risk_assessment;
+                
+                suggestionDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>AI Confidence:</strong> ${(data.ai_confidence * 100).toFixed(1)}%<br>
+                            <strong>Suggested Amount:</strong> €${rec.eur_amount.toFixed(2)}<br>
+                            <strong>Quantity:</strong> ${rec.quantity.toFixed(6)}
+                        </div>
+                        <div class="col-6">
+                            <strong>Risk Level:</strong> <span class="text-${risk.risk_level === 'LOW' ? 'success' : risk.risk_level === 'MEDIUM' ? 'warning' : 'danger'}">${risk.risk_level}</span><br>
+                            <strong>Expected Change:</strong> ${data.expected_price_change_pct > 0 ? '+' : ''}${data.expected_price_change_pct.toFixed(2)}%<br>
+                            <strong>Portfolio %:</strong> ${rec.position_pct.toFixed(1)}%
+                        </div>
+                    </div>
+                `;
+
+                // Auto-fill recommended values
+                document.getElementById('entryPrice').value = data.current_price.toFixed(4);
+                document.getElementById('quantity').value = rec.quantity.toFixed(6);
+
+            } catch (error) {
+                suggestionDiv.innerHTML = `<div class="text-danger">Failed to get suggestion</div>`;
+            }
+        });
+
+        async function addPosition() {
+            const formData = {
+                coin_id: document.getElementById('positionCoin').value,
+                entry_price: parseFloat(document.getElementById('entryPrice').value),
+                quantity: parseFloat(document.getElementById('quantity').value),
+                notes: document.getElementById('positionNotes').value
+            };
+
+            if (!formData.coin_id || !formData.entry_price || !formData.quantity) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/portfolio/add/Main Portfolio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Position added successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('addPositionModal')).hide();
+                    document.getElementById('addPositionForm').reset();
+                    refreshPortfolio();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+
+            } catch (error) {
+                alert('Failed to add position: ' + error.message);
+            }
+        }
+
+        async function sellPosition(coinId) {
+            if (!confirm('Are you sure you want to sell this position?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/portfolio/sell/Main Portfolio/${coinId}`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`Position sold! P&L: €${result.pnl.toFixed(2)}`);
+                    refreshPortfolio();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+
+            } catch (error) {
+                alert('Failed to sell position: ' + error.message);
+            }
+        }
+
+        function showPositionSuggestion() {
+            alert('Select "Add Position" and choose a cryptocurrency to see AI-powered position sizing suggestions!');
+        }
+    </script>
+</body>
+</html>

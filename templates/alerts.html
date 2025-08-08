@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Alert Manager - Crypto AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .alert-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .alert-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        .alert-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .alert-priority-critical {
+            border-left: 5px solid #dc3545;
+            background: rgba(220, 53, 69, 0.05);
+        }
+        .alert-priority-high {
+            border-left: 5px solid #fd7e14;
+            background: rgba(253, 126, 20, 0.05);
+        }
+        .alert-priority-medium {
+            border-left: 5px solid #ffc107;
+            background: rgba(255, 193, 7, 0.05);
+        }
+        .alert-priority-low {
+            border-left: 5px solid #20c997;
+            background: rgba(32, 201, 151, 0.05);
+        }
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        .monitoring-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+        .monitoring-indicator.active {
+            background: #28a745;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .alert-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Analysis</a>
+                <a class="nav-link" href="/charts">Charts</a>
+                <a class="nav-link" href="/portfolio">Portfolio</a>
+                <a class="nav-link active" href="/alerts">Alerts</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Toast Notifications Container -->
+    <div class="notification-toast" id="toastContainer"></div>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert-card p-4 text-center">
+                    <h2><i class="fas fa-bell text-warning"></i> Alert Manager</h2>
+                    <p class="text-muted">Real-time notifications für AI-Signale, Preisbewegungen und Portfolio-Risiken</p>
+                    <div class="d-flex justify-content-center align-items-center mt-3">
+                        <span class="me-2">Monitoring Status:</span>
+                        <div class="monitoring-indicator" id="monitoringIndicator"></div>
+                        <span id="monitoringStatus" class="ms-2 fw-bold">Offline</span>
+                        <button id="toggleMonitoring" class="btn btn-sm btn-primary ms-3">
+                            <i class="fas fa-play"></i> Start Monitoring
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Statistics -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert-card p-3">
+                    <h6><i class="fas fa-chart-bar text-info"></i> Alert Statistics</h6>
+                    <div class="alert-stats" id="alertStats">
+                        <div class="stat-item">
+                            <div id="totalAlerts" class="h4 text-primary">--</div>
+                            <small class="text-muted">Total Alerts</small>
+                        </div>
+                        <div class="stat-item">
+                            <div id="activeAlerts" class="h4 text-success">--</div>
+                            <small class="text-muted">Active</small>
+                        </div>
+                        <div class="stat-item">
+                            <div id="triggeredAlerts" class="h4 text-warning">--</div>
+                            <small class="text-muted">Triggered</small>
+                        </div>
+                        <div class="stat-item">
+                            <div id="recentAlerts" class="h4 text-info">--</div>
+                            <small class="text-muted">Last 7 Days</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Alert Creation -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert-card p-3">
+                    <h6><i class="fas fa-plus-circle text-success"></i> Quick Alert Creation</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" onclick="showCreateAlert('confidence')">
+                                <i class="fas fa-brain"></i><br>
+                                <small>High Confidence Alert</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100" onclick="showCreateAlert('price')">
+                                <i class="fas fa-dollar-sign"></i><br>
+                                <small>Price Alert</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger w-100" onclick="showCreateAlert('stop_loss')">
+                                <i class="fas fa-stop-circle"></i><br>
+                                <small>Stop Loss Alert</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100" onclick="showCreateAlert('take_profit')">
+                                <i class="fas fa-target"></i><br>
+                                <small>Take Profit Alert</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Alerts -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="alert-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6><i class="fas fa-bell text-warning"></i> Active Alerts</h6>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshAlerts()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    
+                    <div id="activeAlertsContainer">
+                        <div class="text-center text-muted" id="noAlertsMessage">
+                            <i class="fas fa-bell-slash fa-3x mb-3"></i>
+                            <p>No active alerts. Create your first alert above!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Notifications -->
+            <div class="col-lg-4">
+                <div class="alert-card p-3">
+                    <h6><i class="fas fa-history text-secondary"></i> Recent Notifications</h6>
+                    <div id="recentNotifications" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Recent notifications will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert History -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert-card p-3">
+                    <h6><i class="fas fa-clipboard-list text-dark"></i> Alert History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Symbol</th>
+                                    <th>Type</th>
+                                    <th>Priority</th>
+                                    <th>Message</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alertHistoryTable">
+                                <!-- History will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Alert Modal -->
+    <div class="modal fade" id="createAlertModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">⚡ Create New Alert</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAlertForm">
+                        <div class="mb-3">
+                            <label class="form-label">Alert Type</label>
+                            <select id="alertType" class="form-select" required>
+                                <option value="confidence">High Confidence Signal</option>
+                                <option value="price">Price Movement</option>
+                                <option value="stop_loss">Stop Loss</option>
+                                <option value="take_profit">Take Profit</option>
+                                <option value="portfolio_risk">Portfolio Risk</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cryptocurrency</label>
+                            <select id="alertCoin" class="form-select" required>
+                                <option value="">-- Select Coin --</option>
+                                <option value="bitcoin">Bitcoin (BTC)</option>
+                                <option value="ethereum">Ethereum (ETH)</option>
+                                <option value="binancecoin">Binance Coin (BNB)</option>
+                                <option value="ripple">Ripple (XRP)</option>
+                                <option value="solana">Solana (SOL)</option>
+                                <option value="cardano">Cardano (ADA)</option>
+                                <option value="dogecoin">Dogecoin (DOGE)</option>
+                                <option value="polygon">Polygon (MATIC)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Dynamic form fields based on alert type -->
+                        <div id="dynamicAlertFields">
+                            <!-- Fields will be populated based on alert type -->
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email Notification (optional)</label>
+                            <input type="email" id="alertEmail" class="form-control" placeholder="your@email.com">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createAlert()">Create Alert</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let monitoringActive = false;
+        let alertRefreshInterval = null;
+        
+        // Load alerts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshAlerts();
+            checkMonitoringStatus();
+            startAlertRefresh();
+        });
+
+        function startAlertRefresh() {
+            // Refresh alerts every 30 seconds
+            alertRefreshInterval = setInterval(() => {
+                refreshAlerts();
+                refreshNotifications();
+            }, 30000);
+        }
+
+        async function refreshAlerts() {
+            try {
+                // Load statistics
+                const statsResponse = await fetch('/api/alerts/stats');
+                const stats = await statsResponse.json();
+                displayAlertStats(stats);
+
+                // Load active alerts
+                const alertsResponse = await fetch('/api/alerts/active');
+                const alerts = await alertsResponse.json();
+                displayActiveAlerts(alerts);
+
+                // Load alert history
+                const historyResponse = await fetch('/api/alerts/history');
+                const history = await historyResponse.json();
+                displayAlertHistory(history);
+
+            } catch (error) {
+                console.error('Failed to refresh alerts:', error);
+            }
+        }
+
+        async function refreshNotifications() {
+            try {
+                const response = await fetch('/api/alerts/notifications');
+                const notifications = await response.json();
+                displayRecentNotifications(notifications);
+            } catch (error) {
+                console.error('Failed to refresh notifications:', error);
+            }
+        }
+
+        function displayAlertStats(stats) {
+            document.getElementById('totalAlerts').textContent = stats.total_alerts || 0;
+            document.getElementById('activeAlerts').textContent = stats.active_alerts || 0;
+            document.getElementById('triggeredAlerts').textContent = stats.triggered_alerts || 0;
+            document.getElementById('recentAlerts').textContent = stats.recent_notifications_7d || 0;
+            
+            // Update monitoring status
+            const indicator = document.getElementById('monitoringIndicator');
+            const status = document.getElementById('monitoringStatus');
+            const toggle = document.getElementById('toggleMonitoring');
+            
+            if (stats.monitoring_active) {
+                indicator.classList.add('active');
+                status.textContent = 'Online';
+                toggle.innerHTML = '<i class="fas fa-pause"></i> Stop Monitoring';
+                toggle.className = 'btn btn-sm btn-danger ms-3';
+                monitoringActive = true;
+            } else {
+                indicator.classList.remove('active');
+                status.textContent = 'Offline';
+                toggle.innerHTML = '<i class="fas fa-play"></i> Start Monitoring';
+                toggle.className = 'btn btn-sm btn-primary ms-3';
+                monitoringActive = false;
+            }
+        }
+
+        function displayActiveAlerts(alerts) {
+            const container = document.getElementById('activeAlertsContainer');
+            const noAlertsMessage = document.getElementById('noAlertsMessage');
+            
+            if (!alerts || alerts.length === 0) {
+                noAlertsMessage.style.display = 'block';
+                return;
+            }
+            
+            noAlertsMessage.style.display = 'none';
+            container.innerHTML = '';
+            
+            alerts.forEach(alert => {
+                const alertElement = createAlertElement(alert);
+                container.appendChild(alertElement);
+            });
+        }
+
+        function createAlertElement(alert) {
+            const div = document.createElement('div');
+            div.className = `alert-item alert-priority-${alert.priority}`;
+            
+            const typeIcon = {
+                'confidence': 'fas fa-brain',
+                'price_change': 'fas fa-dollar-sign',
+                'stop_loss': 'fas fa-stop-circle',
+                'take_profit': 'fas fa-target',
+                'portfolio_risk': 'fas fa-exclamation-triangle'
+            };
+            
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="${typeIcon[alert.alert_type] || 'fas fa-bell'} me-2"></i>
+                            <strong>${alert.coin_symbol}</strong>
+                            <span class="badge bg-${alert.priority === 'critical' ? 'danger' : 
+                                                    alert.priority === 'high' ? 'warning' : 
+                                                    alert.priority === 'medium' ? 'info' : 'success'} ms-2">
+                                ${alert.priority.toUpperCase()}
+                            </span>
+                        </div>
+                        <div class="text-muted mb-2">${alert.message}</div>
+                        <small class="text-secondary">
+                            Created: ${new Date(alert.created_date).toLocaleString()} | 
+                            Triggers: ${alert.trigger_count}
+                        </small>
+                    </div>
+                    <div class="ms-3">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAlert('${alert.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        function displayRecentNotifications(notifications) {
+            const container = document.getElementById('recentNotifications');
+            container.innerHTML = '';
+            
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted"><small>No recent notifications</small></div>';
+                return;
+            }
+            
+            notifications.slice(-10).reverse().forEach(notification => {
+                const div = document.createElement('div');
+                div.className = 'border-bottom pb-2 mb-2';
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <strong class="text-${notification.priority === 'critical' ? 'danger' : 
+                                                   notification.priority === 'high' ? 'warning' : 'info'}">
+                                ${notification.coin_symbol}
+                            </strong>
+                            <div class="small text-muted">${notification.message.split('\n')[0]}</div>
+                            <div class="small text-secondary">${new Date(notification.timestamp).toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function displayAlertHistory(history) {
+            const tbody = document.getElementById('alertHistoryTable');
+            tbody.innerHTML = '';
+            
+            if (!history || history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No alert history</td></tr>';
+                return;
+            }
+            
+            history.slice(-20).reverse().forEach(notification => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><small>${new Date(notification.timestamp).toLocaleString()}</small></td>
+                    <td><strong>${notification.coin_symbol}</strong></td>
+                    <td><span class="badge bg-secondary">${notification.alert_id.split('_')[0]}</span></td>
+                    <td><span class="badge bg-${notification.priority === 'critical' ? 'danger' : 
+                                                notification.priority === 'high' ? 'warning' : 'info'}">
+                        ${notification.priority}
+                    </span></td>
+                    <td><small>${notification.message.substring(0, 50)}...</small></td>
+                    <td><small>${notification.data ? Object.keys(notification.data).length + ' fields' : '-'}</small></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function toggleMonitoring() {
+            try {
+                const endpoint = monitoringActive ? '/api/alerts/stop-monitoring' : '/api/alerts/start-monitoring';
+                const response = await fetch(endpoint, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Monitoring ' + (monitoringActive ? 'stopped' : 'started'), 'success');
+                    setTimeout(() => refreshAlerts(), 1000);
+                } else {
+                    showToast('Failed to toggle monitoring: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showToast('Error toggling monitoring: ' + error.message, 'error');
+            }
+        }
+
+        document.getElementById('toggleMonitoring').addEventListener('click', toggleMonitoring);
+
+        function showCreateAlert(type) {
+            document.getElementById('alertType').value = type;
+            updateDynamicFields();
+            new bootstrap.Modal(document.getElementById('createAlertModal')).show();
+        }
+
+        document.getElementById('alertType').addEventListener('change', updateDynamicFields);
+
+        function updateDynamicFields() {
+            const alertType = document.getElementById('alertType').value;
+            const container = document.getElementById('dynamicAlertFields');
+            
+            let html = '';
+            
+            switch(alertType) {
+                case 'confidence':
+                    html = `
+                        <div class="mb-3">
+                            <label class="form-label">Minimum Confidence (%)</label>
+                            <input type="number" id="minConfidence" class="form-control" value="70" min="0" max="100" required>
+                            <div class="form-text">Alert when AI confidence exceeds this threshold</div>
+                        </div>
+                    `;
+                    break;
+                case 'price':
+                    html = `
+                        <div class="mb-3">
+                            <label class="form-label">Target Price (EUR)</label>
+                            <input type="number" id="targetPrice" class="form-control" step="0.0001" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Direction</label>
+                            <select id="priceDirection" class="form-select" required>
+                                <option value="above">Price rises above target</option>
+                                <option value="below">Price falls below target</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'stop_loss':
+                    html = `
+                        <div class="mb-3">
+                            <label class="form-label">Stop Loss Price (EUR)</label>
+                            <input type="number" id="stopLossPrice" class="form-control" step="0.0001" required>
+                            <div class="form-text">Alert when price falls to this level</div>
+                        </div>
+                    `;
+                    break;
+                case 'take_profit':
+                    html = `
+                        <div class="mb-3">
+                            <label class="form-label">Take Profit Price (EUR)</label>
+                            <input type="number" id="takeProfitPrice" class="form-control" step="0.0001" required>
+                            <div class="form-text">Alert when price reaches this target</div>
+                        </div>
+                    `;
+                    break;
+                case 'portfolio_risk':
+                    html = `
+                        <div class="mb-3">
+                            <label class="form-label">Maximum Loss (%)</label>
+                            <input type="number" id="maxLoss" class="form-control" value="-10" max="0" required>
+                            <div class="form-text">Alert when portfolio loss exceeds this percentage</div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        async function createAlert() {
+            const alertType = document.getElementById('alertType').value;
+            const coinId = document.getElementById('alertCoin').value;
+            const email = document.getElementById('alertEmail').value;
+            
+            if (!coinId && alertType !== 'portfolio_risk') {
+                showToast('Please select a cryptocurrency', 'error');
+                return;
+            }
+            
+            const alertData = {
+                alert_type: alertType,
+                coin_id: coinId,
+                user_email: email
+            };
+            
+            // Add type-specific data
+            switch(alertType) {
+                case 'confidence':
+                    alertData.min_confidence = parseFloat(document.getElementById('minConfidence').value) / 100;
+                    break;
+                case 'price':
+                    alertData.target_price = parseFloat(document.getElementById('targetPrice').value);
+                    alertData.direction = document.getElementById('priceDirection').value;
+                    break;
+                case 'stop_loss':
+                    alertData.stop_loss_price = parseFloat(document.getElementById('stopLossPrice').value);
+                    break;
+                case 'take_profit':
+                    alertData.take_profit_price = parseFloat(document.getElementById('takeProfitPrice').value);
+                    break;
+                case 'portfolio_risk':
+                    alertData.max_loss_pct = parseFloat(document.getElementById('maxLoss').value);
+                    break;
+            }
+            
+            try {
+                const response = await fetch('/api/alerts/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(alertData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Alert created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createAlertModal')).hide();
+                    refreshAlerts();
+                } else {
+                    showToast('Error creating alert: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                showToast('Failed to create alert: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteAlert(alertId) {
+            if (!confirm('Are you sure you want to delete this alert?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/alerts/delete/${alertId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Alert deleted', 'success');
+                    refreshAlerts();
+                } else {
+                    showToast('Error deleting alert: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                showToast('Failed to delete alert: ' + error.message, 'error');
+            }
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        async function checkMonitoringStatus() {
+            try {
+                const response = await fetch('/api/alerts/status');
+                const status = await response.json();
+                // Status will be reflected in stats refresh
+            } catch (error) {
+                console.error('Failed to check monitoring status:', error);
+            }
+        }
+
+        // Cleanup interval on page unload
+        window.addEventListener('beforeunload', () => {
+            if (alertRefreshInterval) {
+                clearInterval(alertRefreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>

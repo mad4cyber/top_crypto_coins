@@ -60,6 +60,9 @@
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="/dashboard">Dashboard</a>
                 <a class="nav-link" href="/analysis">Multi-Coin Analysis</a>
+                <a class="nav-link" href="/charts">Charts</a>
+                <a class="nav-link" href="/portfolio">Portfolio</a>
+                <a class="nav-link" href="/alerts">Alerts</a>
             </div>
         </div>
     </nav>
@@ -124,6 +127,32 @@
 
                     <!-- Prediction Result -->
                     <div class="prediction-result">
+                        <!-- Confidence Warning Alert -->
+                        <div id="confidenceAlert" class="alert" style="display: none;">
+                            <h6 id="confidenceWarning"></h6>
+                            <p id="confidenceRecommendation" class="mb-0"></p>
+                        </div>
+
+                        <!-- Interactive Chart -->
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>📊 Interactive Chart with AI Predictions</h6>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-primary active" onclick="setChartTimeframe('1D')">1D</button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="setChartTimeframe('1W')">1W</button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="setChartTimeframe('1M')">1M</button>
+                                </div>
+                            </div>
+                            <div id="tradingview_chart" style="height: 400px; border-radius: 10px; overflow: hidden;"></div>
+                            <div class="mt-2 text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-line"></i> Professional charts powered by TradingView
+                                    | <span id="chartSymbol">--</span> | 
+                                    <span class="text-success">📈 AI Prediction: <span id="chartPrediction">--</span></span>
+                                </small>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="text-center p-3 border rounded">
@@ -140,12 +169,80 @@
                             </div>
                         </div>
 
+                        <!-- Trading Signal -->
+                        <div class="mt-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6>AI Trading Signal</h6>
+                                <div id="tradingSignal" class="h5">--</div>
+                                <small id="signalStrength" class="text-muted">--</small>
+                            </div>
+                        </div>
+
                         <div class="mt-4">
-                            <h6>AI-Konfidenz:</h6>
+                            <h6>AI-Konfidenz & Risk Assessment:</h6>
                             <div class="confidence-bar">
                                 <div id="confidenceFill" class="confidence-fill" style="width: 0%"></div>
                             </div>
-                            <div id="confidenceText" class="text-center mt-1">0%</div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <div id="confidenceText" class="text-center">0%</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="riskAssessment" class="text-center">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Market Sentiment -->
+                        <div class="mt-4">
+                            <h6>📱 Market Sentiment Analysis:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <small class="text-muted">Market Mood</small>
+                                        <div id="marketMood" class="fw-bold">--</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <small class="text-muted">Fear & Greed</small>
+                                        <div id="fearGreedIndex" class="fw-bold">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-4 text-center">
+                                    <small class="text-muted">News Sentiment</small>
+                                    <div id="newsSentiment" class="fw-bold">--</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <small class="text-muted">Social Sentiment</small>
+                                    <div id="socialSentiment" class="fw-bold">--</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <small class="text-muted">Sentiment Boost</small>
+                                    <div id="sentimentBoost" class="fw-bold text-info">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Management -->
+                        <div class="mt-4">
+                            <h6>Risk Management:</h6>
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <small class="text-muted">Max Position</small>
+                                    <div id="maxPosition" class="fw-bold">--</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <small class="text-muted">Stop Loss</small>
+                                    <div id="stopLoss" class="fw-bold text-danger">--</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <small class="text-muted">Take Profit</small>
+                                    <div id="takeProfit" class="fw-bold text-success">--</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Model Performance -->
@@ -180,11 +277,18 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
         const coinSelect = document.getElementById('coinSelect');
         const predictBtn = document.getElementById('predictBtn');
         const loading = document.querySelector('.loading');
         const predictionResult = document.querySelector('.prediction-result');
+
+        // TradingView Chart Variables
+        let tradingViewWidget = null;
+        let currentChartSymbol = null;
+        let currentTimeframe = '1D';
+        let currentPredictionData = null;
 
         // Enable predict button when coin is selected
         coinSelect.addEventListener('change', function() {
@@ -224,6 +328,31 @@
         });
 
         function displayPrediction(data) {
+            // Confidence Analysis
+            const confidenceAnalysis = data.confidence_analysis || {};
+            const tradingAnalysis = data.trading_analysis || {};
+            
+            // Show confidence warning if needed
+            const confidenceAlert = document.getElementById('confidenceAlert');
+            const confidenceLevel = confidenceAnalysis.level || 'unknown';
+            
+            if (confidenceLevel === 'very_low' || confidenceLevel === 'low') {
+                confidenceAlert.style.display = 'block';
+                confidenceAlert.className = `alert alert-warning`;
+                document.getElementById('confidenceWarning').textContent = confidenceAnalysis.warning || '';
+                document.getElementById('confidenceRecommendation').textContent = confidenceAnalysis.recommendation || '';
+            } else if (confidenceLevel === 'moderate') {
+                confidenceAlert.style.display = 'block';
+                confidenceAlert.className = `alert alert-info`;
+                document.getElementById('confidenceWarning').textContent = confidenceAnalysis.warning || '';
+                document.getElementById('confidenceRecommendation').textContent = confidenceAnalysis.recommendation || '';
+            } else if (confidenceLevel === 'good' || confidenceLevel === 'very_high') {
+                confidenceAlert.style.display = 'block';
+                confidenceAlert.className = `alert alert-success`;
+                document.getElementById('confidenceWarning').textContent = confidenceAnalysis.warning || '';
+                document.getElementById('confidenceRecommendation').textContent = confidenceAnalysis.recommendation || '';
+            }
+
             // Current and predicted prices
             document.getElementById('currentPrice').textContent = 
                 `€${data.current_price.toFixed(2)}`;
@@ -236,22 +365,86 @@
             changeElement.textContent = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
             changeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
 
+            // Trading Signal
+            const signalElement = document.getElementById('tradingSignal');
+            const signal = tradingAnalysis.signal || 'N/A';
+            const signalColor = tradingAnalysis.signal_color || 'secondary';
+            signalElement.textContent = signal;
+            signalElement.className = `h5 text-${signalColor}`;
+            
+            document.getElementById('signalStrength').textContent = 
+                `Signal Strength: ${tradingAnalysis.signal_strength || 0}`;
+
             // Confidence
             const confidence = data.confidence * 100;
             document.getElementById('confidenceFill').style.width = `${confidence}%`;
             document.getElementById('confidenceText').textContent = `${confidence.toFixed(1)}%`;
+            
+            // Risk Assessment
+            const riskElement = document.getElementById('riskAssessment');
+            const riskAssessment = confidenceAnalysis.risk_assessment || 'N/A';
+            riskElement.textContent = `Risk: ${riskAssessment}`;
+            
+            if (riskAssessment.includes('SEHR HOCH') || riskAssessment.includes('HOCH')) {
+                riskElement.className = 'text-center text-danger fw-bold';
+            } else if (riskAssessment.includes('MITTEL')) {
+                riskElement.className = 'text-center text-warning fw-bold';
+            } else {
+                riskElement.className = 'text-center text-success fw-bold';
+            }
+
+            // Market Sentiment Analysis
+            const sentimentAnalysis = data.sentiment_analysis || {};
+            
+            document.getElementById('marketMood').textContent = 
+                sentimentAnalysis.market_mood || 'Unknown';
+            
+            const fearGreed = sentimentAnalysis.fear_greed_index || 50;
+            let fearGreedColor = 'text-warning';
+            if (fearGreed > 75) fearGreedColor = 'text-success';
+            else if (fearGreed < 25) fearGreedColor = 'text-danger';
+            
+            const fearGreedElement = document.getElementById('fearGreedIndex');
+            fearGreedElement.textContent = `${fearGreed}/100`;
+            fearGreedElement.className = `fw-bold ${fearGreedColor}`;
+            
+            // News & Social Sentiment
+            const newsSent = sentimentAnalysis.news_sentiment || 0;
+            const newsElement = document.getElementById('newsSentiment');
+            newsElement.textContent = `${newsSent > 0 ? '+' : ''}${(newsSent * 100).toFixed(1)}%`;
+            newsElement.className = `fw-bold ${newsSent > 0 ? 'text-success' : newsSent < 0 ? 'text-danger' : 'text-muted'}`;
+            
+            const socialSent = sentimentAnalysis.social_sentiment || 0;
+            const socialElement = document.getElementById('socialSentiment');
+            socialElement.textContent = `${socialSent > 0 ? '+' : ''}${(socialSent * 100).toFixed(1)}%`;
+            socialElement.className = `fw-bold ${socialSent > 0 ? 'text-success' : socialSent < 0 ? 'text-danger' : 'text-muted'}`;
+            
+            // Sentiment Boost
+            const boost = sentimentAnalysis.confidence_boost_applied || 1;
+            document.getElementById('sentimentBoost').textContent = 
+                `${((boost - 1) * 100).toFixed(0)}%`;
+
+            // Risk Management
+            document.getElementById('maxPosition').textContent = 
+                `${tradingAnalysis.max_position_pct || 0}%`;
+            document.getElementById('stopLoss').textContent = 
+                `-${tradingAnalysis.stop_loss_pct || 0}%`;
+            document.getElementById('takeProfit').textContent = 
+                `+${tradingAnalysis.take_profit_pct || 0}%`;
 
             // Model performance
             const perfContainer = document.getElementById('modelPerformance');
             let perfHtml = '<div class="row">';
             
-            for (const [model, perf] of Object.entries(data.model_performance)) {
+            for (const [model, perf] of Object.entries(data.model_performance || {})) {
                 const r2Score = (perf.r2 * 100).toFixed(1);
+                const r2Color = perf.r2 > 0.5 ? 'text-success' : perf.r2 > 0.2 ? 'text-warning' : 'text-danger';
+                
                 perfHtml += `
                     <div class="col-md-6 mb-2">
                         <small>
                             <strong>${model.replace('_', ' ').toUpperCase()}:</strong> 
-                            R² ${r2Score}%
+                            <span class="${r2Color}">R² ${r2Score}%</span>
                         </small>
                     </div>
                 `;
@@ -262,6 +455,107 @@
 
             // Show result
             predictionResult.style.display = 'block';
+
+            // Update TradingView Chart
+            updateTradingViewChart(coinSelect.value, data);
+        }
+
+        function updateTradingViewChart(coinId, predictionData) {
+            currentPredictionData = predictionData;
+            
+            // Map coin IDs to TradingView symbols
+            const symbolMapping = {
+                'bitcoin': 'BINANCE:BTCUSDT',
+                'ethereum': 'BINANCE:ETHUSDT',
+                'binancecoin': 'BINANCE:BNBUSDT',
+                'ripple': 'BINANCE:XRPUSDT',
+                'solana': 'BINANCE:SOLUSDT',
+                'cardano': 'BINANCE:ADAUSDT',
+                'dogecoin': 'BINANCE:DOGEUSDT',
+                'tether': 'BINANCE:USDTUSDT',
+                'usd-coin': 'BINANCE:USDCUSDT',
+                'tron': 'BINANCE:TRXUSDT',
+                'shiba-inu': 'BINANCE:SHIBUSDT',
+                'avalanche-2': 'BINANCE:AVAXUSDT',
+                'chainlink': 'BINANCE:LINKUSDT',
+                'polygon': 'BINANCE:MATICUSDT'
+            };
+
+            const symbol = symbolMapping[coinId] || `BINANCE:${coinId.toUpperCase()}USDT`;
+            currentChartSymbol = symbol;
+
+            // Update chart info
+            document.getElementById('chartSymbol').textContent = symbol;
+            document.getElementById('chartPrediction').textContent = 
+                `${predictionData.price_change_pct > 0 ? '+' : ''}${predictionData.price_change_pct.toFixed(2)}% (24h)`;
+
+            // Create or update TradingView widget
+            if (tradingViewWidget) {
+                // Remove existing widget
+                document.getElementById('tradingview_chart').innerHTML = '';
+            }
+
+            try {
+                tradingViewWidget = new TradingView.widget({
+                    autosize: true,
+                    symbol: symbol,
+                    interval: currentTimeframe,
+                    container_id: "tradingview_chart",
+                    theme: "dark",
+                    style: "1",
+                    locale: "en",
+                    toolbar_bg: "#1e3c72",
+                    enable_publishing: false,
+                    hide_top_toolbar: false,
+                    hide_legend: true,
+                    save_image: false,
+                    studies: [
+                        "RSI@tv-basicstudies",
+                        "MACD@tv-basicstudies",
+                        "BB@tv-basicstudies"
+                    ],
+                    overrides: {
+                        "paneProperties.background": "#1e3c72",
+                        "paneProperties.backgroundGradientStartColor": "#1e3c72",
+                        "paneProperties.backgroundGradientEndColor": "#2a5298"
+                    }
+                });
+
+                // Add AI prediction annotation (when widget loads)
+                setTimeout(() => {
+                    addPredictionAnnotation(predictionData);
+                }, 3000);
+
+            } catch (error) {
+                console.log('TradingView widget error:', error);
+                document.getElementById('tradingview_chart').innerHTML = 
+                    '<div class="d-flex justify-content-center align-items-center h-100 bg-light rounded">' +
+                    '<div class="text-center">' +
+                    '<i class="fas fa-chart-line fa-3x text-muted mb-3"></i>' +
+                    '<p class="text-muted">Chart wird geladen...</p>' +
+                    '</div></div>';
+            }
+        }
+
+        function addPredictionAnnotation(predictionData) {
+            // This would add AI prediction as chart annotation
+            // TradingView's advanced features require subscription
+            // For now, we show prediction info below chart
+            console.log('AI Prediction:', predictionData);
+        }
+
+        function setChartTimeframe(timeframe) {
+            // Update active button
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            currentTimeframe = timeframe;
+            
+            if (currentChartSymbol && currentPredictionData) {
+                updateTradingViewChart(coinSelect.value, currentPredictionData);
+            }
         }
     </script>
 </body>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 AI Trading Charts - Crypto Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+        .prediction-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Analysis</a>
+                <a class="nav-link active" href="/charts">Charts</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-card p-4 text-center">
+                    <h2><i class="fas fa-chart-area text-primary"></i> Professional Trading Charts</h2>
+                    <p class="text-muted">Interactive charts with AI predictions and technical analysis</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Controls -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="chart-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <select id="symbolSelect" class="form-select" style="width: 200px;">
+                                <option value="BINANCE:BTCUSDT">Bitcoin (BTC)</option>
+                                <option value="BINANCE:ETHUSDT">Ethereum (ETH)</option>
+                                <option value="BINANCE:BNBUSDT">Binance Coin (BNB)</option>
+                                <option value="BINANCE:XRPUSDT">Ripple (XRP)</option>
+                                <option value="BINANCE:SOLUSDT">Solana (SOL)</option>
+                                <option value="BINANCE:ADAUSDT">Cardano (ADA)</option>
+                                <option value="BINANCE:DOGEUSDT">Dogecoin (DOGE)</option>
+                                <option value="BINANCE:MATICUSDT">Polygon (MATIC)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" onclick="setInterval('1')">1m</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setInterval('5')">5m</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setInterval('15')">15m</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setInterval('60')">1h</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setInterval('240')">4h</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setInterval('1D')">1D</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Trading Chart -->
+                    <div style="position: relative;">
+                        <div id="tradingview_main_chart" style="height: 600px; border-radius: 10px; overflow: hidden;"></div>
+                        <div id="predictionOverlay" class="prediction-overlay" style="display: none;">
+                            <div><strong>🤖 AI Prediction</strong></div>
+                            <div id="aiPredictionText">Loading...</div>
+                            <div id="aiConfidenceText">Confidence: --</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <!-- AI Analysis Panel -->
+                <div class="chart-card p-3 mb-3">
+                    <h6><i class="fas fa-robot text-primary"></i> AI Analysis</h6>
+                    <div id="aiAnalysisContent">
+                        <p class="text-muted">Select a symbol to see AI predictions</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100" onclick="refreshAIAnalysis()">
+                        <i class="fas fa-sync-alt"></i> Refresh Analysis
+                    </button>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="chart-card p-3 mb-3">
+                    <h6><i class="fas fa-tachometer-alt text-info"></i> Market Stats</h6>
+                    <div id="quickStats">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <div id="currentPrice" class="h5 text-primary">--</div>
+                                    <small class="text-muted">Current Price</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div id="priceChange24h" class="h5">--</div>
+                                <small class="text-muted">24h Change</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trading Signals -->
+                <div class="chart-card p-3">
+                    <h6><i class="fas fa-signal text-success"></i> Trading Signals</h6>
+                    <div id="tradingSignals">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p class="mt-2">Loading signals...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Charts View -->
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-card p-4">
+                    <h5><i class="fas fa-th text-warning"></i> Multi-Chart Analysis</h5>
+                    <p class="text-muted">Compare multiple cryptocurrencies side by side</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Bitcoin vs Ethereum</h6>
+                            <div id="tradingview_btc_eth" style="height: 300px; border-radius: 8px; overflow: hidden;"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Market Overview</h6>
+                            <div id="tradingview_market_overview" style="height: 300px; border-radius: 8px; overflow: hidden;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        let mainChart = null;
+        let btcEthChart = null;
+        let marketChart = null;
+        let currentSymbol = 'BINANCE:BTCUSDT';
+        let currentInterval = '1';
+
+        // Initialize charts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadInitialData();
+        });
+
+        function initializeCharts() {
+            // Main Trading Chart
+            mainChart = new TradingView.widget({
+                autosize: true,
+                symbol: currentSymbol,
+                interval: currentInterval,
+                container_id: "tradingview_main_chart",
+                theme: "dark",
+                style: "1",
+                locale: "en",
+                toolbar_bg: "#1e3c72",
+                enable_publishing: false,
+                hide_top_toolbar: false,
+                save_image: false,
+                studies: [
+                    "RSI@tv-basicstudies",
+                    "MACD@tv-basicstudies",
+                    "BB@tv-basicstudies",
+                    "Volume@tv-basicstudies"
+                ],
+                overrides: {
+                    "paneProperties.background": "#1e3c72",
+                    "paneProperties.backgroundGradientStartColor": "#1e3c72",
+                    "paneProperties.backgroundGradientEndColor": "#2a5298"
+                }
+            });
+
+            // BTC vs ETH Comparison Chart
+            btcEthChart = new TradingView.widget({
+                autosize: true,
+                symbol: "BINANCE:BTCUSDT",
+                interval: "1D",
+                container_id: "tradingview_btc_eth",
+                theme: "dark",
+                style: "1",
+                locale: "en",
+                toolbar_bg: "#1e3c72",
+                enable_publishing: false,
+                hide_top_toolbar: true,
+                save_image: false,
+                studies: ["Compare@tv-basicstudies"],
+                overrides: {
+                    "paneProperties.background": "#1e3c72"
+                }
+            });
+
+            // Market Overview
+            marketChart = new TradingView.widget({
+                autosize: true,
+                symbol: "CRYPTOCAP:TOTAL",
+                interval: "1D",
+                container_id: "tradingview_market_overview",
+                theme: "dark",
+                style: "1",
+                locale: "en",
+                toolbar_bg: "#1e3c72",
+                enable_publishing: false,
+                hide_top_toolbar: true,
+                save_image: false,
+                overrides: {
+                    "paneProperties.background": "#1e3c72"
+                }
+            });
+        }
+
+        function loadInitialData() {
+            // Show prediction overlay
+            document.getElementById('predictionOverlay').style.display = 'block';
+            
+            // Load AI analysis for Bitcoin
+            refreshAIAnalysis();
+        }
+
+        // Symbol selection change
+        document.getElementById('symbolSelect').addEventListener('change', function() {
+            currentSymbol = this.value;
+            updateMainChart();
+            refreshAIAnalysis();
+        });
+
+        function updateMainChart() {
+            if (mainChart) {
+                document.getElementById('tradingview_main_chart').innerHTML = '';
+                
+                mainChart = new TradingView.widget({
+                    autosize: true,
+                    symbol: currentSymbol,
+                    interval: currentInterval,
+                    container_id: "tradingview_main_chart",
+                    theme: "dark",
+                    style: "1",
+                    locale: "en",
+                    toolbar_bg: "#1e3c72",
+                    enable_publishing: false,
+                    hide_top_toolbar: false,
+                    save_image: false,
+                    studies: [
+                        "RSI@tv-basicstudies",
+                        "MACD@tv-basicstudies", 
+                        "BB@tv-basicstudies",
+                        "Volume@tv-basicstudies"
+                    ],
+                    overrides: {
+                        "paneProperties.background": "#1e3c72",
+                        "paneProperties.backgroundGradientStartColor": "#1e3c72",
+                        "paneProperties.backgroundGradientEndColor": "#2a5298"
+                    }
+                });
+            }
+        }
+
+        function setInterval(interval) {
+            // Update active button
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            currentInterval = interval;
+            updateMainChart();
+        }
+
+        async function refreshAIAnalysis() {
+            const symbolSelect = document.getElementById('symbolSelect');
+            const selectedText = symbolSelect.options[symbolSelect.selectedIndex].text;
+            const coinId = getCoinIdFromSymbol(currentSymbol);
+            
+            document.getElementById('aiAnalysisContent').innerHTML = 
+                '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading AI analysis...</div>';
+            
+            try {
+                const response = await fetch(`/api/predict/${coinId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById('aiAnalysisContent').innerHTML = 
+                        `<div class="text-danger">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                // Update AI Analysis Panel
+                const confidenceAnalysis = data.confidence_analysis || {};
+                const tradingAnalysis = data.trading_analysis || {};
+                const sentimentAnalysis = data.sentiment_analysis || {};
+
+                document.getElementById('aiAnalysisContent').innerHTML = `
+                    <div class="mb-2">
+                        <strong>24h Prediction:</strong><br>
+                        <span class="h6 ${data.price_change_pct >= 0 ? 'text-success' : 'text-danger'}">
+                            ${data.price_change_pct > 0 ? '+' : ''}${data.price_change_pct.toFixed(2)}%
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Confidence:</strong>
+                        <div class="progress mt-1" style="height: 20px;">
+                            <div class="progress-bar bg-info" style="width: ${(data.confidence * 100)}%">
+                                ${(data.confidence * 100).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Signal:</strong> <span class="text-${tradingAnalysis.signal_color || 'secondary'}">${tradingAnalysis.signal || 'N/A'}</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Market Mood:</strong><br>
+                        <small>${sentimentAnalysis.market_mood || 'Unknown'}</small>
+                    </div>
+                    <div class="alert alert-${confidenceAnalysis.level === 'very_low' || confidenceAnalysis.level === 'low' ? 'warning' : 'info'} p-2">
+                        <small>${confidenceAnalysis.recommendation || 'No recommendation available'}</small>
+                    </div>
+                `;
+
+                // Update Quick Stats
+                document.getElementById('currentPrice').textContent = `€${data.current_price.toFixed(2)}`;
+                const change24h = document.getElementById('priceChange24h');
+                change24h.textContent = `${data.price_change_pct > 0 ? '+' : ''}${data.price_change_pct.toFixed(2)}%`;
+                change24h.className = `h5 ${data.price_change_pct >= 0 ? 'text-success' : 'text-danger'}`;
+
+                // Update Prediction Overlay
+                document.getElementById('aiPredictionText').innerHTML = 
+                    `${data.price_change_pct > 0 ? '+' : ''}${data.price_change_pct.toFixed(2)}% (24h)`;
+                document.getElementById('aiConfidenceText').innerHTML = 
+                    `Confidence: ${(data.confidence * 100).toFixed(1)}%`;
+
+                // Update Trading Signals
+                document.getElementById('tradingSignals').innerHTML = `
+                    <div class="text-center">
+                        <div class="h5 text-${tradingAnalysis.signal_color || 'secondary'} mb-2">
+                            ${tradingAnalysis.signal || 'HOLD'}
+                        </div>
+                        <small class="text-muted">Signal Strength: ${tradingAnalysis.signal_strength || 0}</small>
+                        <hr>
+                        <div class="row text-center mt-2">
+                            <div class="col-4">
+                                <div class="text-success fw-bold">${tradingAnalysis.max_position_pct || 0}%</div>
+                                <small class="text-muted">Max Position</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-danger fw-bold">-${tradingAnalysis.stop_loss_pct || 0}%</div>
+                                <small class="text-muted">Stop Loss</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-success fw-bold">+${tradingAnalysis.take_profit_pct || 0}%</div>
+                                <small class="text-muted">Take Profit</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                document.getElementById('aiAnalysisContent').innerHTML = 
+                    `<div class="text-danger">Failed to load AI analysis: ${error.message}</div>`;
+            }
+        }
+
+        function getCoinIdFromSymbol(symbol) {
+            const mapping = {
+                'BINANCE:BTCUSDT': 'bitcoin',
+                'BINANCE:ETHUSDT': 'ethereum',
+                'BINANCE:BNBUSDT': 'binancecoin',
+                'BINANCE:XRPUSDT': 'ripple',
+                'BINANCE:SOLUSDT': 'solana',
+                'BINANCE:ADAUSDT': 'cardano',
+                'BINANCE:DOGEUSDT': 'dogecoin',
+                'BINANCE:MATICUSDT': 'polygon'
+            };
+            return mapping[symbol] || 'bitcoin';
+        }
+    </script>
+</body>
+</html>

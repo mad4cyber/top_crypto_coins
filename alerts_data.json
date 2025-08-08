@@ -1,0 +1,23 @@
+{
+  "active_alerts": {
+    "confidence_bitcoin_1754692013": {
+      "id": "confidence_bitcoin_1754692013",
+      "alert_type": "confidence",
+      "coin_id": "bitcoin",
+      "coin_symbol": "BTC",
+      "condition": {
+        "min_confidence": 0.7,
+        "min_price_change": 5.0
+      },
+      "message": "\ud83d\ude80 High-Confidence Signal f\u00fcr BTC: AI Konfidenz >70%",
+      "priority": "high",
+      "created_date": "2025-08-09T00:26:53.132420",
+      "triggered_date": "",
+      "is_active": true,
+      "is_triggered": false,
+      "trigger_count": 0,
+      "user_email": ""
+    }
+  },
+  "alert_history": []
+}

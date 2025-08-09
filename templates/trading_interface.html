@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💼 Professional Trading Interface - Crypto AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .trading-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        .trading-card:hover {
+            transform: translateY(-5px);
+        }
+        .order-form {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .position-positive { color: #28a745; }
+        .position-negative { color: #dc3545; }
+        .position-neutral { color: #6c757d; }
+        .risk-low { color: #28a745; }
+        .risk-medium { color: #ffc107; }
+        .risk-high { color: #dc3545; }
+        .price-display {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .order-book {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .order-row:hover {
+            background-color: #f8f9fa;
+        }
+        .position-card {
+            border-left: 4px solid;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .position-long { border-left-color: #28a745; }
+        .position-short { border-left-color: #dc3545; }
+        .trading-signal {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .signal-buy { background: rgba(40, 167, 69, 0.1); border: 2px solid #28a745; }
+        .signal-sell { background: rgba(220, 53, 69, 0.1); border: 2px solid #dc3545; }
+        .signal-hold { background: rgba(108, 117, 125, 0.1); border: 2px solid #6c757d; }
+        .real-time-update {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Analysis</a>
+                <a class="nav-link" href="/portfolio">Portfolio</a>
+                <a class="nav-link" href="/performance">Performance</a>
+                <a class="nav-link" href="/ml-optimization">🧠 ML Optimization</a>
+                <a class="nav-link" href="/realtime-sentiment">📊 Live Sentiment</a>
+                <a class="nav-link active" href="/trading-interface">💼 Trading</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="trading-card p-4 text-center">
+                    <h2>💼 Professional Trading Interface</h2>
+                    <p class="text-muted">
+                        <i class="fas fa-chart-line text-success"></i>
+                        Advanced order management with AI-powered insights
+                    </p>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                        <button class="btn btn-success" onclick="startLiveMode()">
+                            <i class="fas fa-play"></i> Live Mode
+                        </button>
+                        <button class="btn btn-warning" onclick="exportTradingData()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Overview -->
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="trading-card p-3 text-center">
+                    <h6>💰 Portfolio Value</h6>
+                    <div id="portfolioValue" class="h4 text-success">$0.00</div>
+                    <div id="portfolioChange" class="small text-muted">--</div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="trading-card p-3 text-center">
+                    <h6>📊 Open Positions</h6>
+                    <div id="openPositions" class="h4 text-primary">0</div>
+                    <div id="totalPnL" class="small">P&L: $0.00</div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="trading-card p-3 text-center">
+                    <h6>📋 Open Orders</h6>
+                    <div id="openOrders" class="h4 text-info">0</div>
+                    <div id="pendingVolume" class="small">Volume: $0.00</div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="trading-card p-3 text-center">
+                    <h6>⚠️ Risk Score</h6>
+                    <div id="riskScore" class="h4 risk-low">0/100</div>
+                    <div id="riskLevel" class="small">Low Risk</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Interface -->
+        <div class="row">
+            <!-- Order Form -->
+            <div class="col-lg-4">
+                <div class="trading-card p-4">
+                    <h5><i class="fas fa-plus-circle text-primary"></i> Create Order</h5>
+                    
+                    <div class="order-form">
+                        <!-- Coin Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Cryptocurrency</label>
+                            <select id="orderCoinSelect" class="form-select">
+                                <option value="">-- Select Coin --</option>
+                                <option value="bitcoin">Bitcoin (BTC)</option>
+                                <option value="ethereum">Ethereum (ETH)</option>
+                                <option value="binancecoin">Binance Coin (BNB)</option>
+                                <option value="solana">Solana (SOL)</option>
+                                <option value="cardano">Cardano (ADA)</option>
+                                <option value="ripple">Ripple (XRP)</option>
+                                <option value="dogecoin">Dogecoin (DOGE)</option>
+                            </select>
+                        </div>
+
+                        <!-- Order Type -->
+                        <div class="mb-3">
+                            <label class="form-label">Order Type</label>
+                            <select id="orderType" class="form-select">
+                                <option value="market">Market Order</option>
+                                <option value="limit">Limit Order</option>
+                                <option value="stop">Stop Order</option>
+                                <option value="stop_limit">Stop-Limit Order</option>
+                                <option value="trailing_stop">Trailing Stop</option>
+                            </select>
+                        </div>
+
+                        <!-- Side -->
+                        <div class="mb-3">
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="orderSide" id="buySide" value="buy" checked>
+                                <label class="btn btn-outline-success" for="buySide">
+                                    <i class="fas fa-arrow-up"></i> Buy
+                                </label>
+                                <input type="radio" class="btn-check" name="orderSide" id="sellSide" value="sell">
+                                <label class="btn btn-outline-danger" for="sellSide">
+                                    <i class="fas fa-arrow-down"></i> Sell
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <div class="input-group">
+                                <input type="number" id="orderQuantity" class="form-control" placeholder="0.00" step="0.00001">
+                                <button class="btn btn-outline-secondary" onclick="setMaxQuantity()">MAX</button>
+                            </div>
+                            <div id="quantityUSD" class="form-text">$0.00 USD</div>
+                        </div>
+
+                        <!-- Price (for limit orders) -->
+                        <div class="mb-3" id="priceSection" style="display: none;">
+                            <label class="form-label">Price</label>
+                            <div class="input-group">
+                                <input type="number" id="orderPrice" class="form-control" placeholder="0.00" step="0.01">
+                                <span class="input-group-text">USD</span>
+                            </div>
+                        </div>
+
+                        <!-- Stop Price -->
+                        <div class="mb-3" id="stopPriceSection" style="display: none;">
+                            <label class="form-label">Stop Price</label>
+                            <div class="input-group">
+                                <input type="number" id="orderStopPrice" class="form-control" placeholder="0.00" step="0.01">
+                                <span class="input-group-text">USD</span>
+                            </div>
+                        </div>
+
+                        <!-- Portfolio Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Portfolio</label>
+                            <select id="portfolioSelect" class="form-select">
+                                <option value="Main Portfolio">Main Portfolio</option>
+                            </select>
+                        </div>
+
+                        <!-- Order Notes -->
+                        <div class="mb-3">
+                            <label class="form-label">Notes (Optional)</label>
+                            <input type="text" id="orderNotes" class="form-control" placeholder="Order notes...">
+                        </div>
+
+                        <!-- Order Summary -->
+                        <div id="orderSummary" class="alert alert-info" style="display: none;">
+                            <h6>Order Summary</h6>
+                            <div id="summaryText"></div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button id="submitOrder" class="btn btn-primary w-100" onclick="submitOrder()">
+                            <i class="fas fa-check"></i> Place Order
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Risk Management -->
+                <div class="trading-card p-3 mt-3">
+                    <h6><i class="fas fa-shield-alt text-warning"></i> Risk Management</h6>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h6" id="maxPositionSize">25%</div>
+                            <small class="text-muted">Max Position</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h6" id="stopLossDefault">5%</div>
+                            <small class="text-muted">Stop Loss</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h6" id="takeProfitDefault">15%</div>
+                            <small class="text-muted">Take Profit</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Book & Positions -->
+            <div class="col-lg-8">
+                <!-- Trading Signal -->
+                <div id="tradingSignal" class="trading-signal signal-hold">
+                    <h6><i class="fas fa-robot"></i> AI Trading Signal</h6>
+                    <div id="signalText">Analyzing market conditions...</div>
+                </div>
+
+                <!-- Tabs for Orders/Positions -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="open-orders-tab" data-bs-toggle="tab" data-bs-target="#open-orders">
+                            <i class="fas fa-list"></i> Open Orders (<span id="openOrdersCount">0</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="positions-tab" data-bs-toggle="tab" data-bs-target="#positions">
+                            <i class="fas fa-chart-pie"></i> Positions (<span id="positionsCount">0</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="trade-history-tab" data-bs-toggle="tab" data-bs-target="#trade-history">
+                            <i class="fas fa-history"></i> Trade History
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content trading-card p-3">
+                    <!-- Open Orders Tab -->
+                    <div class="tab-pane fade show active" id="open-orders">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6>Open Orders</h6>
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelAllOrders()">
+                                <i class="fas fa-times"></i> Cancel All
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Coin</th>
+                                        <th>Type</th>
+                                        <th>Side</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="openOrdersTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">No open orders</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Positions Tab -->
+                    <div class="tab-pane fade" id="positions">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6>Open Positions</h6>
+                            <button class="btn btn-sm btn-outline-info" onclick="updatePositionsPnL()">
+                                <i class="fas fa-sync"></i> Update P&L
+                            </button>
+                        </div>
+                        <div id="positionsContainer">
+                            <div class="text-center text-muted p-4">
+                                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                                <p>No open positions</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trade History Tab -->
+                    <div class="tab-pane fade" id="trade-history">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6>Recent Trades</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="loadTradeHistory(7)">7D</button>
+                                <button class="btn btn-outline-primary" onclick="loadTradeHistory(30)">30D</button>
+                                <button class="btn btn-outline-primary active" onclick="loadTradeHistory(90)">90D</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Coin</th>
+                                        <th>Side</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                        <th>Fees</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tradeHistoryTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Loading trade history...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Metrics Dashboard -->
+        <div class="row">
+            <div class="col-12">
+                <div class="trading-card p-4">
+                    <h5><i class="fas fa-chart-bar text-danger"></i> Risk Metrics Dashboard</h5>
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="totalExposure">$0.00</div>
+                            <small class="text-muted">Total Exposure</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="currentDrawdown">0.00%</div>
+                            <small class="text-muted">Current Drawdown</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="var1Day">$0.00</div>
+                            <small class="text-muted">1-Day VaR</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="sharpeRatio">0.00</div>
+                            <small class="text-muted">Sharpe Ratio</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let tradingInterface = null;
+        let liveMode = false;
+        let refreshInterval = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTradingInterface();
+            loadInitialData();
+            setupEventListeners();
+        });
+
+        function initializeTradingInterface() {
+            // Initialize trading interface state
+            tradingInterface = {
+                selectedCoin: null,
+                currentPrices: {},
+                positions: [],
+                orders: [],
+                riskMetrics: {}
+            };
+        }
+
+        function setupEventListeners() {
+            // Order type change handler
+            document.getElementById('orderType').addEventListener('change', function() {
+                toggleOrderFields(this.value);
+            });
+
+            // Coin selection handler
+            document.getElementById('orderCoinSelect').addEventListener('change', function() {
+                updateCoinPrice(this.value);
+            });
+
+            // Quantity change handler
+            document.getElementById('orderQuantity').addEventListener('input', function() {
+                updateOrderSummary();
+            });
+
+            // Price change handler
+            document.getElementById('orderPrice').addEventListener('input', function() {
+                updateOrderSummary();
+            });
+        }
+
+        function toggleOrderFields(orderType) {
+            const priceSection = document.getElementById('priceSection');
+            const stopPriceSection = document.getElementById('stopPriceSection');
+
+            // Hide all optional fields first
+            priceSection.style.display = 'none';
+            stopPriceSection.style.display = 'none';
+
+            // Show relevant fields based on order type
+            switch(orderType) {
+                case 'limit':
+                case 'stop_limit':
+                    priceSection.style.display = 'block';
+                    break;
+                case 'stop':
+                case 'trailing_stop':
+                    stopPriceSection.style.display = 'block';
+                    break;
+                case 'stop_limit':
+                    stopPriceSection.style.display = 'block';
+                    break;
+            }
+
+            updateOrderSummary();
+        }
+
+        async function loadInitialData() {
+            try {
+                // Load open orders
+                await loadOpenOrders();
+                
+                // Load positions
+                await loadPositions();
+                
+                // Load risk metrics
+                await loadRiskMetrics();
+                
+                // Load trade history
+                await loadTradeHistory(30);
+                
+                // Update portfolio value
+                await updatePortfolioValue();
+                
+            } catch (error) {
+                console.error('Failed to load initial data:', error);
+                showError('Failed to load trading data: ' + error.message);
+            }
+        }
+
+        async function loadOpenOrders() {
+            try {
+                const response = await fetch('/api/trading/orders');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                displayOpenOrders(data.orders || []);
+                document.getElementById('openOrders').textContent = data.orders?.length || 0;
+                document.getElementById('openOrdersCount').textContent = data.orders?.length || 0;
+                
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+                document.getElementById('openOrdersTable').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Failed to load orders</td></tr>';
+            }
+        }
+
+        function displayOpenOrders(orders) {
+            const tableBody = document.getElementById('openOrdersTable');
+            
+            if (orders.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No open orders</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = orders.map(order => `
+                <tr>
+                    <td>
+                        <strong>${order.coin_symbol}</strong>
+                        <div class="small text-muted">${order.coin_id}</div>
+                    </td>
+                    <td><span class="badge bg-primary">${order.order_type}</span></td>
+                    <td>
+                        <span class="badge ${order.side === 'buy' ? 'bg-success' : 'bg-danger'}">
+                            ${order.side.toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="price-display">${order.quantity}</td>
+                    <td class="price-display">${order.price ? '$' + parseFloat(order.price).toFixed(2) : 'Market'}</td>
+                    <td>
+                        <span class="badge bg-${getStatusColor(order.status)}">
+                            ${order.status.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder('${order.order_id}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'warning',
+                'open': 'info',
+                'filled': 'success',
+                'cancelled': 'secondary',
+                'rejected': 'danger'
+            };
+            return colors[status] || 'secondary';
+        }
+
+        async function loadPositions() {
+            try {
+                const response = await fetch('/api/trading/positions');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                displayPositions(data.positions || []);
+                document.getElementById('openPositions').textContent = data.positions?.length || 0;
+                document.getElementById('positionsCount').textContent = data.positions?.length || 0;
+                
+                // Calculate total P&L
+                const totalPnL = data.positions?.reduce((sum, pos) => sum + (pos.unrealized_pnl || 0), 0) || 0;
+                document.getElementById('totalPnL').textContent = `P&L: ${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`;
+                document.getElementById('totalPnL').className = `small ${totalPnL >= 0 ? 'text-success' : 'text-danger'}`;
+                
+            } catch (error) {
+                console.error('Failed to load positions:', error);
+            }
+        }
+
+        function displayPositions(positions) {
+            const container = document.getElementById('positionsContainer');
+            
+            if (positions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <p>No open positions</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = positions.map(position => {
+                const pnlClass = position.unrealized_pnl >= 0 ? 'text-success' : 'text-danger';
+                const pnlPercent = ((position.current_price - position.avg_entry_price) / position.avg_entry_price * 100).toFixed(2);
+                
+                return `
+                    <div class="position-card p-3 mb-3 position-${position.side}">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>${position.coin_symbol}</h6>
+                                <div class="small text-muted">${position.side.toUpperCase()} Position</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small text-muted">Quantity</div>
+                                <div class="price-display">${position.quantity}</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small text-muted">Entry Price</div>
+                                <div class="price-display">$${position.avg_entry_price.toFixed(2)}</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small text-muted">Current Price</div>
+                                <div class="price-display real-time-update">$${position.current_price.toFixed(2)}</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="small text-muted">P&L</div>
+                                <div class="${pnlClass} fw-bold">
+                                    ${position.unrealized_pnl >= 0 ? '+' : ''}$${position.unrealized_pnl.toFixed(2)}
+                                    <div class="small">(${pnlPercent}%)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="addStopLoss('${position.position_id}')">
+                                            <i class="fas fa-shield-alt"></i> Add Stop Loss
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="addTakeProfit('${position.position_id}')">
+                                            <i class="fas fa-target"></i> Add Take Profit
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="closePosition('${position.position_id}')">
+                                            <i class="fas fa-times"></i> Close Position
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadRiskMetrics() {
+            try {
+                const response = await fetch('/api/trading/risk-metrics');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                displayRiskMetrics(data);
+                
+            } catch (error) {
+                console.error('Failed to load risk metrics:', error);
+            }
+        }
+
+        function displayRiskMetrics(metrics) {
+            document.getElementById('riskScore').textContent = `${metrics.risk_score?.toFixed(0) || 0}/100`;
+            document.getElementById('riskScore').className = `h4 ${getRiskClass(metrics.risk_score || 0)}`;
+            document.getElementById('riskLevel').textContent = getRiskLevel(metrics.risk_score || 0);
+            
+            document.getElementById('totalExposure').textContent = `$${(metrics.total_exposure || 0).toFixed(2)}`;
+            document.getElementById('currentDrawdown').textContent = `${(metrics.current_drawdown || 0).toFixed(2)}%`;
+            document.getElementById('var1Day').textContent = `$${Math.abs(metrics.var_1_day || 0).toFixed(2)}`;
+            document.getElementById('sharpeRatio').textContent = (metrics.sharpe_ratio || 0).toFixed(2);
+        }
+
+        function getRiskClass(score) {
+            if (score < 30) return 'risk-low';
+            if (score < 70) return 'risk-medium';
+            return 'risk-high';
+        }
+
+        function getRiskLevel(score) {
+            if (score < 30) return 'Low Risk';
+            if (score < 70) return 'Medium Risk';
+            return 'High Risk';
+        }
+
+        async function submitOrder() {
+            try {
+                const orderData = {
+                    coin_id: document.getElementById('orderCoinSelect').value,
+                    coin_symbol: document.getElementById('orderCoinSelect').selectedOptions[0]?.text?.match(/\((\w+)\)/)?.[1] || '',
+                    order_type: document.getElementById('orderType').value,
+                    side: document.querySelector('input[name="orderSide"]:checked').value,
+                    quantity: parseFloat(document.getElementById('orderQuantity').value),
+                    price: document.getElementById('orderPrice').value ? parseFloat(document.getElementById('orderPrice').value) : null,
+                    stop_price: document.getElementById('orderStopPrice').value ? parseFloat(document.getElementById('orderStopPrice').value) : null,
+                    portfolio_name: document.getElementById('portfolioSelect').value,
+                    notes: document.getElementById('orderNotes').value
+                };
+
+                // Validate form
+                if (!orderData.coin_id || !orderData.quantity || orderData.quantity <= 0) {
+                    throw new Error('Please fill in all required fields');
+                }
+
+                const response = await fetch('/api/trading/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                showSuccess(`Order created successfully: ${result.order_id}`);
+                
+                // Reset form
+                document.getElementById('orderCoinSelect').value = '';
+                document.getElementById('orderQuantity').value = '';
+                document.getElementById('orderPrice').value = '';
+                document.getElementById('orderStopPrice').value = '';
+                document.getElementById('orderNotes').value = '';
+                
+                // Reload data
+                await loadOpenOrders();
+                await loadPositions();
+                await updatePortfolioValue();
+                
+            } catch (error) {
+                showError('Failed to create order: ' + error.message);
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            if (!confirm('Are you sure you want to cancel this order?')) return;
+            
+            try {
+                const response = await fetch(`/api/trading/cancel-order/${orderId}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                showSuccess('Order cancelled successfully');
+                await loadOpenOrders();
+                
+            } catch (error) {
+                showError('Failed to cancel order: ' + error.message);
+            }
+        }
+
+        function startLiveMode() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            
+            liveMode = true;
+            refreshInterval = setInterval(refreshData, 30000); // 30 seconds
+            
+            document.querySelector('button[onclick="startLiveMode()"]').innerHTML = 
+                '<i class="fas fa-stop"></i> Stop Live';
+            document.querySelector('button[onclick="startLiveMode()"]').setAttribute('onclick', 'stopLiveMode()');
+            document.querySelector('button[onclick="startLiveMode()"]').className = 'btn btn-danger';
+        }
+
+        function stopLiveMode() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+            
+            liveMode = false;
+            
+            document.querySelector('button[onclick="stopLiveMode()"]').innerHTML = 
+                '<i class="fas fa-play"></i> Live Mode';
+            document.querySelector('button[onclick="stopLiveMode()"]').setAttribute('onclick', 'startLiveMode()');
+            document.querySelector('button[onclick="stopLiveMode()"]').className = 'btn btn-success';
+        }
+
+        async function refreshData() {
+            if (liveMode) {
+                await updatePositionsPnL();
+                await loadRiskMetrics();
+                await updatePortfolioValue();
+            }
+        }
+
+        async function updatePositionsPnL() {
+            try {
+                const response = await fetch('/api/trading/update-pnl', { method: 'POST' });
+                const result = await response.json();
+                
+                if (!result.error) {
+                    await loadPositions();
+                }
+            } catch (error) {
+                console.error('Failed to update P&L:', error);
+            }
+        }
+
+        function showSuccess(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+
+        function showError(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast align-items-center text-white bg-danger border-0 position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+
+        // Placeholder functions for additional features
+        function updateCoinPrice(coinId) { /* Implementation for real-time price updates */ }
+        function updateOrderSummary() { /* Implementation for order summary calculation */ }
+        function setMaxQuantity() { /* Implementation for max quantity calculation */ }
+        function cancelAllOrders() { /* Implementation for cancelling all orders */ }
+        function loadTradeHistory(days) { /* Implementation for loading trade history */ }
+        function updatePortfolioValue() { /* Implementation for portfolio value updates */ }
+        function addStopLoss(positionId) { /* Implementation for adding stop loss */ }
+        function addTakeProfit(positionId) { /* Implementation for adding take profit */ }
+        function closePosition(positionId) { /* Implementation for closing position */ }
+        function exportTradingData() { /* Implementation for data export */ }
+    </script>
+</body>
+</html>

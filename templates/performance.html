@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Performance Analytics - Crypto AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .performance-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .accuracy-high { color: #28a745; }
+        .accuracy-medium { color: #ffc107; }
+        .accuracy-low { color: #dc3545; }
+        .roi-positive { color: #28a745; }
+        .roi-negative { color: #dc3545; }
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        .progress-ring__circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+        .progress-ring__bg {
+            stroke: #e9ecef;
+        }
+        .progress-ring__progress {
+            stroke: #28a745;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        .coin-rank-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: rgba(248, 249, 250, 0.5);
+            transition: all 0.3s ease;
+        }
+        .coin-rank-item:hover {
+            background: rgba(248, 249, 250, 0.8);
+            transform: translateX(5px);
+        }
+        .rank-badge {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .rank-1 { background: #ffd700; color: #000; }
+        .rank-2 { background: #c0c0c0; color: #000; }
+        .rank-3 { background: #cd7f32; color: #fff; }
+        .rank-other { background: #6c757d; color: #fff; }
+        .timeframe-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .backtest-result {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(248, 249, 250, 0.3);
+        }
+        .trade-item {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .trade-win { background: rgba(40, 167, 69, 0.1); }
+        .trade-loss { background: rgba(220, 53, 69, 0.1); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Analysis</a>
+                <a class="nav-link" href="/charts">Charts</a>
+                <a class="nav-link" href="/portfolio">Portfolio</a>
+                <a class="nav-link" href="/alerts">Alerts</a>
+                <a class="nav-link active" href="/performance">Performance</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="performance-card p-4 text-center">
+                    <h2><i class="fas fa-chart-line text-primary"></i> AI Performance Analytics</h2>
+                    <p class="text-muted">Track AI prediction accuracy, backtesting results, and ROI performance</p>
+                    
+                    <!-- Timeframe Selector -->
+                    <div class="timeframe-selector justify-content-center">
+                        <button class="btn btn-outline-primary active" onclick="setTimeframe(7)">7 Days</button>
+                        <button class="btn btn-outline-primary" onclick="setTimeframe(30)">30 Days</button>
+                        <button class="btn btn-outline-primary" onclick="setTimeframe(90)">90 Days</button>
+                        <button class="btn btn-outline-primary" onclick="setTimeframe(365)">1 Year</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Performance Metrics -->
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card">
+                    <h6 class="text-muted">Overall Accuracy</h6>
+                    <div class="progress-ring">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="progress-ring__bg" cx="60" cy="60" r="50"></circle>
+                            <circle id="accuracyRing" class="progress-ring__progress" cx="60" cy="60" r="50" 
+                                    stroke-dasharray="314.16" stroke-dashoffset="314.16"></circle>
+                        </svg>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                            <div id="overallAccuracy" class="h4 accuracy-medium">--</div>
+                            <small class="text-muted">Accuracy</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card">
+                    <h6 class="text-muted">Direction Accuracy</h6>
+                    <div id="directionAccuracy" class="h3 accuracy-medium">--</div>
+                    <small class="text-muted">Correct price direction</small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card">
+                    <h6 class="text-muted">Theoretical ROI</h6>
+                    <div id="theoreticalROI" class="h3">--</div>
+                    <small class="text-muted">If all signals followed</small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card">
+                    <h6 class="text-muted">Total Predictions</h6>
+                    <div id="totalPredictions" class="h3 text-info">--</div>
+                    <small id="avgPerDay" class="text-muted">-- per day</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance by Confidence Level -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="performance-card p-3">
+                    <h6><i class="fas fa-shield-alt text-success"></i> Performance by Confidence Level</h6>
+                    
+                    <div id="confidenceBreakdown">
+                        <div class="row mb-3">
+                            <div class="col-4">
+                                <div class="text-center">
+                                    <div class="h5 text-success" id="highConfidenceAccuracy">--</div>
+                                    <small class="text-muted">High Confidence</small><br>
+                                    <small id="highConfidenceCount" class="text-secondary">(-- predictions)</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-center">
+                                    <div class="h5 text-warning" id="mediumConfidenceAccuracy">--</div>
+                                    <small class="text-muted">Medium Confidence</small><br>
+                                    <small id="mediumConfidenceCount" class="text-secondary">(-- predictions)</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-center">
+                                    <div class="h5 text-danger" id="lowConfidenceAccuracy">--</div>
+                                    <small class="text-muted">Low Confidence</small><br>
+                                    <small id="lowConfidenceCount" class="text-secondary">(-- predictions)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <small><strong>Insight:</strong> <span id="confidenceInsight">Loading analysis...</span></small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="performance-card p-3">
+                    <h6><i class="fas fa-trophy text-warning"></i> Top Performing Coins</h6>
+                    
+                    <div id="coinRanking">
+                        <!-- Coin rankings will be loaded here -->
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshRankings()">
+                            <i class="fas fa-sync-alt"></i> Refresh Rankings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backtesting Results -->
+        <div class="row">
+            <div class="col-12">
+                <div class="performance-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6><i class="fas fa-history text-info"></i> Backtesting Results</h6>
+                        <div>
+                            <button class="btn btn-sm btn-primary" onclick="runBacktest()">
+                                <i class="fas fa-play"></i> Run New Backtest
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="backtestResults">
+                        <!-- Backtest results will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Predictions Performance -->
+        <div class="row">
+            <div class="col-12">
+                <div class="performance-card p-3">
+                    <h6><i class="fas fa-list text-secondary"></i> Recent Predictions Performance</h6>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Coin</th>
+                                    <th>Predicted</th>
+                                    <th>Actual</th>
+                                    <th>Confidence</th>
+                                    <th>Accuracy</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentPredictionsTable">
+                                <!-- Recent predictions will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Run Backtest Modal -->
+    <div class="modal fade" id="backtestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🔄 Run Backtest</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="backtestForm">
+                        <div class="mb-3">
+                            <label class="form-label">Cryptocurrency</label>
+                            <select id="backtestCoin" class="form-select" required>
+                                <option value="">-- Select Coin --</option>
+                                <option value="bitcoin">Bitcoin (BTC)</option>
+                                <option value="ethereum">Ethereum (ETH)</option>
+                                <option value="binancecoin">Binance Coin (BNB)</option>
+                                <option value="ripple">Ripple (XRP)</option>
+                                <option value="solana">Solana (SOL)</option>
+                                <option value="cardano">Cardano (ADA)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Strategy</label>
+                            <select id="backtestStrategy" class="form-select" required>
+                                <option value="high_confidence">High Confidence Strategy</option>
+                                <option value="momentum">Momentum Strategy</option>
+                                <option value="contrarian">Contrarian Strategy</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Initial Capital (EUR)</label>
+                            <input type="number" id="backtestCapital" class="form-control" value="10000" min="1000" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Days Back</label>
+                            <input type="number" id="backtestDays" class="form-control" value="30" min="7" max="365" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="executeBacktest()">
+                        <i class="fas fa-play"></i> Run Backtest
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentTimeframe = 7;
+        let performanceData = null;
+
+        // Load performance data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPerformanceData();
+            setInterval(loadPerformanceData, 60000); // Refresh every minute
+        });
+
+        function setTimeframe(days) {
+            // Update active button
+            document.querySelectorAll('.timeframe-selector .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentTimeframe = days;
+            loadPerformanceData();
+        }
+
+        async function loadPerformanceData() {
+            try {
+                const response = await fetch(`/api/performance/summary?days=${currentTimeframe}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Performance data error:', data.error);
+                    return;
+                }
+                
+                performanceData = data;
+                displayPerformanceMetrics(data);
+                loadCoinRankings();
+                loadBacktestResults();
+                loadRecentPredictions();
+                
+            } catch (error) {
+                console.error('Failed to load performance data:', error);
+            }
+        }
+
+        function displayPerformanceMetrics(data) {
+            // Overall accuracy with ring animation
+            const accuracy = (data.avg_accuracy_score * 100) || 0;
+            document.getElementById('overallAccuracy').textContent = `${accuracy.toFixed(1)}%`;
+            
+            // Update accuracy ring
+            const ring = document.getElementById('accuracyRing');
+            const circumference = 314.16; // 2 * π * 50
+            const offset = circumference - (accuracy / 100) * circumference;
+            ring.style.strokeDashoffset = offset;
+            
+            // Color coding for accuracy
+            const accuracyElement = document.getElementById('overallAccuracy');
+            if (accuracy >= 70) {
+                accuracyElement.className = 'h4 accuracy-high';
+                ring.style.stroke = '#28a745';
+            } else if (accuracy >= 50) {
+                accuracyElement.className = 'h4 accuracy-medium';
+                ring.style.stroke = '#ffc107';
+            } else {
+                accuracyElement.className = 'h4 accuracy-low';
+                ring.style.stroke = '#dc3545';
+            }
+
+            // Direction accuracy
+            const directionAcc = (data.direction_accuracy * 100) || 0;
+            document.getElementById('directionAccuracy').textContent = `${directionAcc.toFixed(1)}%`;
+
+            // Theoretical ROI
+            const roi = data.theoretical_roi?.total_return_pct || 0;
+            const roiElement = document.getElementById('theoreticalROI');
+            roiElement.textContent = `${roi > 0 ? '+' : ''}${roi.toFixed(1)}%`;
+            roiElement.className = roi >= 0 ? 'h3 roi-positive' : 'h3 roi-negative';
+
+            // Total predictions
+            const totalPreds = data.total_predictions || 0;
+            document.getElementById('totalPredictions').textContent = totalPreds;
+            document.getElementById('avgPerDay').textContent = `${(totalPreds / currentTimeframe).toFixed(1)} per day`;
+
+            // Confidence breakdown
+            const confidence = data.accuracy_by_confidence || {};
+            
+            document.getElementById('highConfidenceAccuracy').textContent = 
+                `${((confidence.high_confidence?.avg_accuracy || 0) * 100).toFixed(1)}%`;
+            document.getElementById('highConfidenceCount').textContent = 
+                `(${confidence.high_confidence?.count || 0} predictions)`;
+                
+            document.getElementById('mediumConfidenceAccuracy').textContent = 
+                `${((confidence.medium_confidence?.avg_accuracy || 0) * 100).toFixed(1)}%`;
+            document.getElementById('mediumConfidenceCount').textContent = 
+                `(${confidence.medium_confidence?.count || 0} predictions)`;
+                
+            document.getElementById('lowConfidenceAccuracy').textContent = 
+                `${((confidence.low_confidence?.avg_accuracy || 0) * 100).toFixed(1)}%`;
+            document.getElementById('lowConfidenceCount').textContent = 
+                `(${confidence.low_confidence?.count || 0} predictions)`;
+
+            // Confidence insight
+            const highAcc = (confidence.high_confidence?.avg_accuracy || 0) * 100;
+            const lowAcc = (confidence.low_confidence?.avg_accuracy || 0) * 100;
+            let insight = "Not enough data for analysis";
+            
+            if (highAcc > lowAcc + 10) {
+                insight = "High confidence predictions perform significantly better. Trust the AI confidence scores!";
+            } else if (highAcc < lowAcc) {
+                insight = "Interesting: Lower confidence predictions are outperforming. Consider reviewing the confidence calculation.";
+            } else {
+                insight = "Confidence levels show similar accuracy. The AI is consistently calibrated across confidence levels.";
+            }
+            
+            document.getElementById('confidenceInsight').textContent = insight;
+        }
+
+        async function loadCoinRankings() {
+            try {
+                const response = await fetch(`/api/performance/rankings?days=${currentTimeframe}`);
+                const rankings = await response.json();
+                
+                const container = document.getElementById('coinRanking');
+                container.innerHTML = '';
+                
+                if (!rankings || rankings.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted">No ranking data available</div>';
+                    return;
+                }
+                
+                rankings.slice(0, 5).forEach((coin, index) => {
+                    const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'coin-rank-item';
+                    item.innerHTML = `
+                        <div class="rank-badge ${rankClass}">${index + 1}</div>
+                        <div class="flex-grow-1">
+                            <strong>${coin.coin_symbol}</strong>
+                            <div class="small text-muted">
+                                ${coin.avg_accuracy.toFixed(2)} accuracy | 
+                                ${coin.theoretical_roi > 0 ? '+' : ''}${coin.theoretical_roi.toFixed(1)}% ROI |
+                                ${coin.total_predictions} predictions
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-success">${coin.score.toFixed(3)}</div>
+                            <div class="small text-muted">Score</div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load coin rankings:', error);
+            }
+        }
+
+        async function loadBacktestResults() {
+            try {
+                const response = await fetch('/api/performance/backtests');
+                const results = await response.json();
+                
+                const container = document.getElementById('backtestResults');
+                container.innerHTML = '';
+                
+                if (!results || results.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted">No backtest results yet. Run your first backtest!</div>';
+                    return;
+                }
+                
+                results.slice(0, 3).forEach(result => {
+                    const returnClass = result.total_return_pct >= 0 ? 'text-success' : 'text-danger';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'backtest-result';
+                    div.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>${result.strategy_name}</strong> - ${result.coin_id.toUpperCase()}
+                                <small class="text-muted">
+                                    (${new Date(result.start_date).toLocaleDateString()} - ${new Date(result.end_date).toLocaleDateString()})
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <div class="${returnClass} fw-bold">${result.total_return_pct > 0 ? '+' : ''}${result.total_return_pct.toFixed(2)}%</div>
+                                <small class="text-muted">Return</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 text-center">
+                                <div class="fw-bold">${result.total_trades}</div>
+                                <small class="text-muted">Trades</small>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div class="fw-bold text-success">${result.win_rate.toFixed(1)}%</div>
+                                <small class="text-muted">Win Rate</small>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div class="fw-bold text-danger">${result.max_drawdown.toFixed(1)}%</div>
+                                <small class="text-muted">Max DD</small>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div class="fw-bold">${result.sharpe_ratio.toFixed(2)}</div>
+                                <small class="text-muted">Sharpe</small>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load backtest results:', error);
+            }
+        }
+
+        async function loadRecentPredictions() {
+            try {
+                const response = await fetch(`/api/performance/recent?limit=20`);
+                const predictions = await response.json();
+                
+                const tbody = document.getElementById('recentPredictionsTable');
+                tbody.innerHTML = '';
+                
+                if (!predictions || predictions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No recent predictions</td></tr>';
+                    return;
+                }
+                
+                predictions.forEach(pred => {
+                    const tr = document.createElement('tr');
+                    
+                    const accuracyClass = pred.accuracy_score >= 0.7 ? 'text-success' : 
+                                         pred.accuracy_score >= 0.5 ? 'text-warning' : 'text-danger';
+                    
+                    const statusBadge = pred.is_resolved ? 
+                        `<span class="badge bg-success">Resolved</span>` : 
+                        `<span class="badge bg-secondary">Pending</span>`;
+                    
+                    tr.innerHTML = `
+                        <td><small>${new Date(pred.prediction_date).toLocaleDateString()}</small></td>
+                        <td><strong>${pred.coin_symbol}</strong></td>
+                        <td><span class="${pred.predicted_change_pct >= 0 ? 'text-success' : 'text-danger'}">
+                            ${pred.predicted_change_pct > 0 ? '+' : ''}${pred.predicted_change_pct.toFixed(2)}%
+                        </span></td>
+                        <td>${pred.is_resolved ? 
+                            `<span class="${pred.actual_change_pct >= 0 ? 'text-success' : 'text-danger'}">
+                                ${pred.actual_change_pct > 0 ? '+' : ''}${pred.actual_change_pct.toFixed(2)}%
+                            </span>` : '--'}
+                        </td>
+                        <td><small>${(pred.confidence * 100).toFixed(1)}%</small></td>
+                        <td>${pred.is_resolved ? 
+                            `<span class="${accuracyClass}">${(pred.accuracy_score * 100).toFixed(1)}%</span>` : '--'}
+                        </td>
+                        <td>${statusBadge}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load recent predictions:', error);
+            }
+        }
+
+        function refreshRankings() {
+            loadCoinRankings();
+        }
+
+        function runBacktest() {
+            new bootstrap.Modal(document.getElementById('backtestModal')).show();
+        }
+
+        async function executeBacktest() {
+            const coin = document.getElementById('backtestCoin').value;
+            const strategy = document.getElementById('backtestStrategy').value;
+            const capital = document.getElementById('backtestCapital').value;
+            const days = document.getElementById('backtestDays').value;
+            
+            if (!coin || !strategy) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/performance/backtest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        coin_id: coin,
+                        strategy_name: strategy,
+                        initial_capital: parseFloat(capital),
+                        days_back: parseInt(days)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('backtestModal')).hide();
+                    loadBacktestResults();
+                    alert(`Backtest completed! Return: ${result.total_return_pct > 0 ? '+' : ''}${result.total_return_pct.toFixed(2)}%`);
+                } else {
+                    alert('Backtest failed: ' + result.error);
+                }
+                
+            } catch (error) {
+                alert('Failed to run backtest: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

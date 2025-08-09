@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚠️ Risk Management - Crypto AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #dc3545 0%, #6f42c1 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        .risk-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            margin-bottom: 20px;
+            color: #333;
+            transition: transform 0.3s ease;
+        }
+        .risk-card:hover {
+            transform: translateY(-5px);
+        }
+        .risk-gauge {
+            width: 200px;
+            height: 100px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .gauge-bg {
+            width: 100%;
+            height: 100%;
+            border-radius: 100px 100px 0 0;
+            background: conic-gradient(from 180deg, #28a745 0deg, #ffc107 90deg, #dc3545 180deg);
+            position: relative;
+        }
+        .gauge-needle {
+            width: 4px;
+            height: 80px;
+            background: #333;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-45deg);
+            transition: transform 0.5s ease;
+            border-radius: 2px;
+        }
+        .risk-low { color: #28a745; }
+        .risk-medium { color: #ffc107; }
+        .risk-high { color: #fd7e14; }
+        .risk-critical { color: #dc3545; }
+        .risk-meter {
+            height: 20px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #dc3545 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .risk-indicator {
+            width: 4px;
+            height: 100%;
+            background: #fff;
+            position: absolute;
+            top: 0;
+            transition: left 0.5s ease;
+            border-radius: 2px;
+        }
+        .alert-panel {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .warning-panel {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .safe-panel {
+            background: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .position-risk-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+        }
+        .position-high-risk { border-left-color: #dc3545; }
+        .position-medium-risk { border-left-color: #ffc107; }
+        .position-low-risk { border-left-color: #28a745; }
+        .correlation-matrix {
+            font-size: 0.8em;
+        }
+        .correlation-cell {
+            text-align: center;
+            padding: 5px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        .correlation-high { background-color: #dc3545; }
+        .correlation-medium { background-color: #ffc107; }
+        .correlation-low { background-color: #28a745; }
+        .var-chart {
+            height: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .stress-test-item {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Analysis</a>
+                <a class="nav-link" href="/portfolio">Portfolio</a>
+                <a class="nav-link" href="/performance">Performance</a>
+                <a class="nav-link" href="/ml-optimization">🧠 ML Optimization</a>
+                <a class="nav-link" href="/realtime-sentiment">📊 Live Sentiment</a>
+                <a class="nav-link" href="/trading-interface">💼 Trading</a>
+                <a class="nav-link" href="/professional-charts">📈 Charts</a>
+                <a class="nav-link active" href="/risk-management">⚠️ Risk</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="risk-card p-4 text-center">
+                    <h2>⚠️ Comprehensive Risk Management Dashboard</h2>
+                    <p class="text-muted">
+                        Advanced portfolio risk analysis and real-time risk monitoring
+                    </p>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-primary" onclick="refreshRiskData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="btn btn-warning" onclick="runStressTest()">
+                            <i class="fas fa-exclamation-triangle"></i> Stress Test
+                        </button>
+                        <button class="btn btn-danger" onclick="generateRiskReport()">
+                            <i class="fas fa-file-pdf"></i> Risk Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overall Risk Overview -->
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="risk-card p-4 text-center">
+                    <h5>🎯 Overall Risk Score</h5>
+                    <div class="risk-gauge">
+                        <div class="gauge-bg">
+                            <div id="riskGaugeNeedle" class="gauge-needle"></div>
+                        </div>
+                    </div>
+                    <div id="overallRiskScore" class="h2 mt-3 risk-medium">65/100</div>
+                    <div id="riskLevel" class="text-muted">MEDIUM RISK</div>
+                    <div class="mt-3">
+                        <small class="text-muted">Last updated: <span id="lastUpdate">--</span></small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="risk-card p-4">
+                    <h6><i class="fas fa-chart-line text-danger"></i> Value at Risk (VaR)</h6>
+                    <div class="row">
+                        <div class="col-6 text-center">
+                            <div class="h4" id="var1Day">$0</div>
+                            <small class="text-muted">1 Day (95%)</small>
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="h4" id="var7Day">$0</div>
+                            <small class="text-muted">7 Days (95%)</small>
+                        </div>
+                        <div class="col-6 text-center mt-2">
+                            <div class="h4" id="var30Day">$0</div>
+                            <small class="text-muted">30 Days (95%)</small>
+                        </div>
+                        <div class="col-6 text-center mt-2">
+                            <div class="h4" id="expectedShortfall">$0</div>
+                            <small class="text-muted">Expected Shortfall</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="risk-card p-4">
+                    <h6><i class="fas fa-balance-scale text-warning"></i> Portfolio Metrics</h6>
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Total Exposure:</span>
+                                <strong id="totalExposure">$0</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Max Drawdown:</span>
+                                <strong id="maxDrawdown" class="text-danger">0%</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Sharpe Ratio:</span>
+                                <strong id="sharpeRatio">0.0</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Beta (vs BTC):</span>
+                                <strong id="portfolioBeta">1.0</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <span>Volatility:</span>
+                                <strong id="volatility">0%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Alerts and Warnings -->
+        <div class="row">
+            <div class="col-12">
+                <div class="risk-card p-4">
+                    <h5><i class="fas fa-exclamation-triangle text-warning"></i> Active Risk Alerts</h5>
+                    <div id="riskAlerts">
+                        <!-- Risk alerts will be populated here -->
+                        <div class="text-center text-muted">
+                            <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                            <p>No active risk alerts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Position Risk Analysis -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="risk-card p-4">
+                    <h5><i class="fas fa-coins text-primary"></i> Position Risk Analysis</h5>
+                    <div id="positionRiskAnalysis">
+                        <!-- Position risk items will be populated here -->
+                        <div class="text-center text-muted p-3">
+                            <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                            <p>Loading position analysis...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Correlation Matrix -->
+                <div class="risk-card p-4 mt-3">
+                    <h5><i class="fas fa-project-diagram text-info"></i> Asset Correlation Matrix</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm correlation-matrix">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>BTC</th>
+                                    <th>ETH</th>
+                                    <th>BNB</th>
+                                    <th>SOL</th>
+                                    <th>ADA</th>
+                                </tr>
+                            </thead>
+                            <tbody id="correlationMatrix">
+                                <!-- Correlation data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        High correlation (>0.7) indicates increased portfolio risk during market stress
+                    </small>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Risk Distribution -->
+                <div class="risk-card p-3">
+                    <h6><i class="fas fa-chart-pie text-success"></i> Risk Distribution</h6>
+                    <canvas id="riskDistributionChart" width="300" height="200"></canvas>
+                    <div class="mt-3">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="h6 risk-low" id="lowRiskPct">0%</div>
+                                <small>Low Risk</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="h6 risk-medium" id="mediumRiskPct">0%</div>
+                                <small>Medium Risk</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="h6 risk-high" id="highRiskPct">0%</div>
+                                <small>High Risk</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concentration Risk -->
+                <div class="risk-card p-3 mt-3">
+                    <h6><i class="fas fa-compress-alt text-warning"></i> Concentration Risk</h6>
+                    <div id="concentrationAnalysis">
+                        <!-- Concentration data will be populated here -->
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-lightbulb"></i> 
+                            Tip: Diversify holdings to reduce concentration risk
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Liquidity Risk -->
+                <div class="risk-card p-3 mt-3">
+                    <h6><i class="fas fa-tint text-info"></i> Liquidity Risk</h6>
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Highly Liquid:</span>
+                                <strong id="highLiquidityPct">0%</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Medium Liquid:</span>
+                                <strong id="mediumLiquidityPct">0%</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <span>Low Liquid:</span>
+                                <strong id="lowLiquidityPct">0%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Scenarios and Stress Testing -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="risk-card p-4">
+                    <h5><i class="fas fa-bolt text-danger"></i> Stress Test Scenarios</h5>
+                    <div id="stressTestResults">
+                        <!-- Stress test results will be populated here -->
+                        <div class="text-center text-muted p-3">
+                            <i class="fas fa-vial fa-2x mb-2"></i>
+                            <p>Click "Stress Test" to run analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="risk-card p-4">
+                    <h5><i class="fas fa-history text-secondary"></i> Historical VaR</h5>
+                    <div class="var-chart">
+                        <canvas id="varHistoryChart" width="400" height="150"></canvas>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-6 text-center">
+                            <div class="h6" id="avgVaR">$0</div>
+                            <small class="text-muted">Average VaR (30d)</small>
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="h6" id="maxVaR">$0</div>
+                            <small class="text-muted">Max VaR (30d)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Management Tools -->
+        <div class="row">
+            <div class="col-12">
+                <div class="risk-card p-4">
+                    <h5><i class="fas fa-tools text-primary"></i> Risk Management Tools</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                                    <h6>Position Sizing</h6>
+                                    <button class="btn btn-sm btn-success" onclick="optimizePositionSizing()">
+                                        Optimize
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-stop-circle fa-2x text-warning mb-2"></i>
+                                    <h6>Stop Losses</h6>
+                                    <button class="btn btn-sm btn-warning" onclick="setPortfolioStopLosses()">
+                                        Set All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-balance-scale fa-2x text-info mb-2"></i>
+                                    <h6>Rebalancing</h6>
+                                    <button class="btn btn-sm btn-info" onclick="suggestRebalancing()">
+                                        Suggest
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-bell fa-2x text-danger mb-2"></i>
+                                    <h6>Risk Alerts</h6>
+                                    <button class="btn btn-sm btn-danger" onclick="configureAlerts()">
+                                        Configure
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let riskDistributionChart = null;
+        let varHistoryChart = null;
+        let refreshInterval = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadRiskData();
+            startAutoRefresh();
+        });
+
+        function initializeCharts() {
+            // Risk Distribution Pie Chart
+            const riskCtx = document.getElementById('riskDistributionChart').getContext('2d');
+            riskDistributionChart = new Chart(riskCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                    datasets: [{
+                        data: [40, 35, 25],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // VaR History Chart
+            const varCtx = document.getElementById('varHistoryChart').getContext('2d');
+            const labels = Array.from({length: 30}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (29 - i));
+                return date.toLocaleDateString();
+            });
+
+            varHistoryChart = new Chart(varCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '1-Day VaR',
+                        data: generateVaRHistory(),
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false
+                        },
+                        y: {
+                            ticks: {
+                                color: '#ffffff',
+                                callback: function(value) {
+                                    return '$' + Math.abs(value).toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateVaRHistory() {
+            // Simulate VaR history data
+            return Array.from({length: 30}, () => -Math.random() * 5000 - 1000);
+        }
+
+        async function loadRiskData() {
+            try {
+                // Load risk metrics from API
+                const response = await fetch('/api/trading/risk-metrics');
+                const riskData = await response.json();
+
+                if (riskData.error) {
+                    throw new Error(riskData.error);
+                }
+
+                updateRiskDisplay(riskData);
+                updateRiskAlerts(riskData);
+                updatePositionRiskAnalysis();
+                updateCorrelationMatrix();
+                updateConcentrationAnalysis();
+
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+
+            } catch (error) {
+                console.error('Failed to load risk data:', error);
+                showRiskError('Failed to load risk data: ' + error.message);
+            }
+        }
+
+        function updateRiskDisplay(riskData) {
+            // Update overall risk score
+            const riskScore = riskData.risk_score || 0;
+            document.getElementById('overallRiskScore').textContent = `${riskScore.toFixed(0)}/100`;
+            
+            // Update risk gauge needle
+            const needleRotation = (riskScore / 100) * 180 - 90; // -90° to +90°
+            document.getElementById('riskGaugeNeedle').style.transform = 
+                `translateX(-50%) rotate(${needleRotation}deg)`;
+
+            // Update risk level and color
+            const riskElement = document.getElementById('overallRiskScore');
+            const levelElement = document.getElementById('riskLevel');
+            
+            if (riskScore < 30) {
+                riskElement.className = 'h2 mt-3 risk-low';
+                levelElement.textContent = 'LOW RISK';
+            } else if (riskScore < 60) {
+                riskElement.className = 'h2 mt-3 risk-medium';
+                levelElement.textContent = 'MEDIUM RISK';
+            } else if (riskScore < 80) {
+                riskElement.className = 'h2 mt-3 risk-high';
+                levelElement.textContent = 'HIGH RISK';
+            } else {
+                riskElement.className = 'h2 mt-3 risk-critical';
+                levelElement.textContent = 'CRITICAL RISK';
+            }
+
+            // Update VaR values
+            document.getElementById('var1Day').textContent = `$${Math.abs(riskData.var_1_day || 0).toFixed(0)}`;
+            document.getElementById('var7Day').textContent = `$${Math.abs((riskData.var_1_day || 0) * 2.65).toFixed(0)}`;
+            document.getElementById('var30Day').textContent = `$${Math.abs((riskData.var_1_day || 0) * 5.48).toFixed(0)}`;
+            document.getElementById('expectedShortfall').textContent = `$${Math.abs((riskData.var_1_day || 0) * 1.3).toFixed(0)}`;
+
+            // Update portfolio metrics
+            document.getElementById('totalExposure').textContent = `$${(riskData.total_exposure || 0).toFixed(0)}`;
+            document.getElementById('maxDrawdown').textContent = `${(riskData.current_drawdown || 0).toFixed(1)}%`;
+            document.getElementById('sharpeRatio').textContent = (riskData.sharpe_ratio || 0).toFixed(2);
+            document.getElementById('portfolioBeta').textContent = (Math.random() * 0.5 + 0.75).toFixed(2); // Simulated
+            document.getElementById('volatility').textContent = `${(Math.random() * 30 + 20).toFixed(1)}%`; // Simulated
+
+            // Update average and max VaR
+            document.getElementById('avgVaR').textContent = `$${Math.abs(riskData.var_1_day || 0).toFixed(0)}`;
+            document.getElementById('maxVaR').textContent = `$${Math.abs((riskData.var_1_day || 0) * 1.5).toFixed(0)}`;
+        }
+
+        function updateRiskAlerts(riskData) {
+            const alerts = [];
+            const riskScore = riskData.risk_score || 0;
+
+            // Generate risk alerts based on metrics
+            if (riskScore > 80) {
+                alerts.push({
+                    type: 'alert',
+                    title: 'Critical Risk Level',
+                    message: 'Portfolio risk score exceeds 80. Consider reducing exposure.',
+                    icon: 'fas fa-exclamation-triangle'
+                });
+            }
+
+            if (riskData.current_drawdown > 15) {
+                alerts.push({
+                    type: 'warning',
+                    title: 'High Drawdown',
+                    message: `Current drawdown of ${riskData.current_drawdown.toFixed(1)}% exceeds recommended threshold.`,
+                    icon: 'fas fa-chart-line'
+                });
+            }
+
+            if (riskData.open_positions > 10) {
+                alerts.push({
+                    type: 'warning',
+                    title: 'High Position Count',
+                    message: `${riskData.open_positions} open positions may increase management complexity.`,
+                    icon: 'fas fa-layer-group'
+                });
+            }
+
+            const container = document.getElementById('riskAlerts');
+            if (alerts.length === 0) {
+                container.innerHTML = `
+                    <div class="safe-panel text-center">
+                        <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                        <h6>All Clear</h6>
+                        <p class="mb-0">No active risk alerts. Portfolio is within acceptable risk parameters.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = alerts.map(alert => `
+                    <div class="${alert.type}-panel">
+                        <div class="d-flex align-items-center">
+                            <i class="${alert.icon} fa-2x me-3"></i>
+                            <div>
+                                <h6 class="mb-1">${alert.title}</h6>
+                                <p class="mb-0">${alert.message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updatePositionRiskAnalysis() {
+            // Simulate position risk data
+            const positions = [
+                { symbol: 'BTC', value: 25000, risk: 'low', pnl: 2.5, volatility: 85 },
+                { symbol: 'ETH', value: 15000, risk: 'medium', pnl: -1.2, volatility: 95 },
+                { symbol: 'SOL', value: 8000, risk: 'high', pnl: 5.8, volatility: 120 },
+                { symbol: 'ADA', value: 5000, risk: 'medium', pnl: -0.5, volatility: 105 }
+            ];
+
+            const container = document.getElementById('positionRiskAnalysis');
+            container.innerHTML = positions.map(pos => `
+                <div class="position-risk-item position-${pos.risk}-risk">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <strong>${pos.symbol}</strong>
+                            <div class="small text-muted">Position</div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="fw-bold">$${pos.value.toLocaleString()}</div>
+                            <div class="small text-muted">Value</div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="fw-bold ${pos.pnl >= 0 ? 'text-success' : 'text-danger'}">
+                                ${pos.pnl >= 0 ? '+' : ''}${pos.pnl}%
+                            </div>
+                            <div class="small text-muted">P&L</div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="fw-bold">${pos.volatility}%</div>
+                            <div class="small text-muted">30d Vol</div>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge bg-${pos.risk === 'low' ? 'success' : pos.risk === 'medium' ? 'warning' : 'danger'}">
+                                ${pos.risk.toUpperCase()}
+                            </span>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="adjustPosition('${pos.symbol}')">
+                                Adjust
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCorrelationMatrix() {
+            const coins = ['BTC', 'ETH', 'BNB', 'SOL', 'ADA'];
+            const correlations = {};
+            
+            // Generate correlation matrix
+            coins.forEach(coin1 => {
+                correlations[coin1] = {};
+                coins.forEach(coin2 => {
+                    if (coin1 === coin2) {
+                        correlations[coin1][coin2] = 1.0;
+                    } else {
+                        correlations[coin1][coin2] = Math.random() * 1.8 - 0.9; // -0.9 to 0.9
+                    }
+                });
+            });
+
+            const tbody = document.getElementById('correlationMatrix');
+            tbody.innerHTML = coins.map(coin1 => `
+                <tr>
+                    <th>${coin1}</th>
+                    ${coins.map(coin2 => {
+                        const corr = correlations[coin1][coin2];
+                        const cellClass = Math.abs(corr) > 0.7 ? 'correlation-high' : 
+                                         Math.abs(corr) > 0.3 ? 'correlation-medium' : 'correlation-low';
+                        return `<td class="correlation-cell ${cellClass}">${corr.toFixed(2)}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function updateConcentrationAnalysis() {
+            const concentration = [
+                { asset: 'BTC', percentage: 45, risk: 'high' },
+                { asset: 'ETH', percentage: 25, risk: 'medium' },
+                { asset: 'Others', percentage: 30, risk: 'low' }
+            ];
+
+            const container = document.getElementById('concentrationAnalysis');
+            container.innerHTML = concentration.map(item => `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong>${item.asset}</strong>
+                        <span class="badge bg-${item.risk === 'high' ? 'danger' : item.risk === 'medium' ? 'warning' : 'success'} ms-2">
+                            ${item.risk}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>${item.percentage}%</strong>
+                        <div class="progress mt-1" style="width: 60px; height: 4px;">
+                            <div class="progress-bar bg-${item.risk === 'high' ? 'danger' : item.risk === 'medium' ? 'warning' : 'success'}" 
+                                 style="width: ${item.percentage}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update liquidity percentages
+            document.getElementById('highLiquidityPct').textContent = '70%';
+            document.getElementById('mediumLiquidityPct').textContent = '25%';
+            document.getElementById('lowLiquidityPct').textContent = '5%';
+        }
+
+        async function runStressTest() {
+            const container = document.getElementById('stressTestResults');
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div><p class="mt-2">Running stress tests...</p></div>';
+
+            // Simulate stress test delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const scenarios = [
+                { name: 'Market Crash (-50%)', impact: -42500, probability: '5%', recovery: '6-12 months' },
+                { name: 'Crypto Winter (-80%)', impact: -68000, probability: '2%', recovery: '2-3 years' },
+                { name: 'Regulatory Ban', impact: -55000, probability: '3%', recovery: '1-2 years' },
+                { name: 'Exchange Hack', impact: -15000, probability: '8%', recovery: '3-6 months' }
+            ];
+
+            container.innerHTML = scenarios.map(scenario => `
+                <div class="stress-test-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${scenario.name}</strong>
+                            <div class="small text-muted">Recovery: ${scenario.recovery}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-danger">${scenario.impact < 0 ? '' : '+'}$${scenario.impact.toLocaleString()}</div>
+                            <div class="small text-muted">Prob: ${scenario.probability}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function refreshRiskData() {
+            loadRiskData();
+        }
+
+        function startAutoRefresh() {
+            refreshInterval = setInterval(() => {
+                loadRiskData();
+            }, 60000); // Update every minute
+        }
+
+        function generateRiskReport() {
+            alert('Risk report generation would be implemented with PDF export functionality');
+        }
+
+        function optimizePositionSizing() {
+            alert('Position sizing optimization would integrate with the ML optimizer');
+        }
+
+        function setPortfolioStopLosses() {
+            alert('Automated stop-loss setting for all positions');
+        }
+
+        function suggestRebalancing() {
+            alert('Portfolio rebalancing suggestions would be generated');
+        }
+
+        function configureAlerts() {
+            alert('Risk alert configuration modal would open');
+        }
+
+        function adjustPosition(symbol) {
+            alert(`Position adjustment for ${symbol} would open trading interface`);
+        }
+
+        function showRiskError(message) {
+            const container = document.getElementById('riskAlerts');
+            container.innerHTML = `
+                <div class="alert-panel">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h6 class="mb-1">Error Loading Risk Data</h6>
+                            <p class="mb-0">${message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>

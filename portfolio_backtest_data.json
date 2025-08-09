@@ -1,0 +1,141 @@
+{
+  "backtest_results": [
+    {
+      "timestamp": "2025-08-09T00:50:18.195394",
+      "strategies": [
+        {
+          "strategy_name": "Equal Weight",
+          "backtest_period": {
+            "start_date": "2025-08-02T00:50:16.034851",
+            "end_date": "2025-08-09T00:50:16.034851",
+            "duration_days": 7,
+            "market_regime": "volatile",
+            "volatility_level": "high"
+          },
+          "initial_capital": 1000,
+          "final_capital": 821.7100821670488,
+          "total_return_pct": -17.828991783295123,
+          "annualized_return_pct": -929.6545715575314,
+          "volatility_pct": 12.628187256712554,
+          "sharpe_ratio": -73.61742051008711,
+          "max_drawdown_pct": 30.457179040007677,
+          "recovery_days": 30,
+          "win_rate": 0.0,
+          "rebalancing_frequency": 1,
+          "transaction_costs": 2.0,
+          "net_return_pct": -17.928991783295125,
+          "risk_adjusted_return": -73.61742051008711,
+          "performance_metrics": {
+            "sortino_ratio": -88.34090461210454,
+            "calmar_ratio": -30.523331472568877,
+            "information_ratio": 0.1,
+            "tracking_error": 0.12628187256712553
+          },
+          "allocation_history": [
+            {
+              "timestamp": "2025-08-02T00:50:16.034851",
+              "allocations": {
+                "bitcoin": 0.5,
+                "ethereum": 0.5
+              }
+            }
+          ]
+        },
+        {
+          "strategy_name": "ML Optimization",
+          "backtest_period": {
+            "start_date": "2025-08-02T00:50:16.034851",
+            "end_date": "2025-08-09T00:50:16.034851",
+            "duration_days": 7,
+            "market_regime": "volatile",
+            "volatility_level": "high"
+          },
+          "initial_capital": 1000,
+          "final_capital": 946.6419761517838,
+          "total_return_pct": -5.335802384821615,
+          "annualized_return_pct": -278.22398149426994,
+          "volatility_pct": 1.7576775227217862,
+          "sharpe_ratio": -158.29068637313887,
+          "max_drawdown_pct": 5.274242548768702,
+          "recovery_days": 15,
+          "win_rate": 0.0,
+          "rebalancing_frequency": 4,
+          "transaction_costs": 4.0,
+          "net_return_pct": -5.735802384821614,
+          "risk_adjusted_return": -158.29068637313887,
+          "performance_metrics": {
+            "sortino_ratio": -205.77789228508053,
+            "calmar_ratio": -52.75145746932376,
+            "information_ratio": 0.25,
+            "tracking_error": 0.017576775227217862
+          },
+          "allocation_history": [
+            {
+              "timestamp": "2025-08-02T00:50:16.034851",
+              "allocations": {
+                "bitcoin": 0.5,
+                "ethereum": 0.5
+              }
+            }
+          ]
+        },
+        {
+          "strategy_name": "Dynamic Allocation",
+          "backtest_period": {
+            "start_date": "2025-08-02T00:50:16.034851",
+            "end_date": "2025-08-09T00:50:16.034851",
+            "duration_days": 7,
+            "market_regime": "volatile",
+            "volatility_level": "high"
+          },
+          "initial_capital": 1000,
+          "final_capital": 1000,
+          "total_return_pct": 0,
+          "annualized_return_pct": 0,
+          "volatility_pct": 10,
+          "sharpe_ratio": 0,
+          "max_drawdown_pct": 5,
+          "recovery_days": 30,
+          "win_rate": 0.5,
+          "rebalancing_frequency": 1,
+          "transaction_costs": 0,
+          "net_return_pct": 0,
+          "risk_adjusted_return": 0,
+          "performance_metrics": {},
+          "allocation_history": []
+        }
+      ],
+      "best_strategy": "Dynamic Allocation",
+      "performance_ranking": [
+        [
+          "Dynamic Allocation",
+          0.9500000000000001
+        ],
+        [
+          "Equal Weight",
+          -28.805026969784805
+        ],
+        [
+          "ML Optimization",
+          -62.3850243818977
+        ]
+      ],
+      "market_conditions": {
+        "backtest_period_days": 7,
+        "market_regime": "volatile",
+        "volatility_level": "high",
+        "assets_analyzed": 2
+      },
+      "insights": [
+        "\ud83c\udfc6 Best performer: Dynamic Allocation with 0.00% return",
+        "\ud83d\udcca Achieved 0.00 Sharpe ratio with 5.0% max drawdown",
+        "\ud83d\udcc8 Return spread: 17.83% between best and worst strategy",
+        "\u2696\ufe0f Average Sharpe ratio: -77.30",
+        "\ud83d\udee1\ufe0f Best risk control: Dynamic Allocation with 5.0% max drawdown",
+        "\ud83c\udfaf Highest accuracy: Dynamic Allocation with 50.0% win rate",
+        "\ud83d\udcb0 Total transaction costs across all strategies: \u20ac6.00"
+      ]
+    }
+  ],
+  "last_updated": "2025-08-09T00:50:18.195398"
+}

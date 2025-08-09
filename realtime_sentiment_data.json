@@ -1,0 +1,519 @@
+{
+  "sentiment_data": [
+    {
+      "timestamp": "2025-08-09T00:58:09.189198",
+      "source": "twitter",
+      "coin_symbol": "BTC",
+      "sentiment_score": 1.0,
+      "confidence": 0.4,
+      "volume": 487,
+      "impact_score": 0.1948,
+      "raw_data": {
+        "post": "BTC is looking bullish! Great momentum building \ud83d\ude80",
+        "engagement": 487
+      },
+      "keywords": [
+        "bull"
+      ],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-09T00:28:09.189198",
+      "source": "reddit",
+      "coin_symbol": "BTC",
+      "sentiment_score": 1.0,
+      "confidence": 0.2,
+      "volume": 1703,
+      "impact_score": 0.3406,
+      "raw_data": {
+        "post": "Might be time to take profits on BTC, seems overbought",
+        "engagement": 1703
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T23:58:09.189198",
+      "source": "discord",
+      "coin_symbol": "BTC",
+      "sentiment_score": 1.0,
+      "confidence": 0.4,
+      "volume": 432,
+      "impact_score": 0.1728,
+      "raw_data": {
+        "post": "HODL BTC! Long term this is going to moon \ud83c\udf19",
+        "engagement": 432
+      },
+      "keywords": [
+        "moon",
+        "hodl"
+      ],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-08T23:28:09.189198",
+      "source": "telegram",
+      "coin_symbol": "BTC",
+      "sentiment_score": -1.0,
+      "confidence": 0.4,
+      "volume": 341,
+      "impact_score": 0.13640000000000002,
+      "raw_data": {
+        "post": "BTC chart looks bearish, expecting a pullback",
+        "engagement": 341
+      },
+      "keywords": [
+        "bear"
+      ],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-08T22:58:09.189198",
+      "source": "twitter",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1324,
+      "impact_score": 0.0,
+      "raw_data": {
+        "post": "Just bought more BTC! Diamond hands \ud83d\udc8e\ud83d\ude4c",
+        "engagement": 1324
+      },
+      "keywords": [
+        "diamond",
+        "hands"
+      ],
+      "influence_level": "medium"
+    },
+    {
+      "timestamp": "2025-08-08T22:28:09.189198",
+      "source": "reddit",
+      "coin_symbol": "BTC",
+      "sentiment_score": -1.0,
+      "confidence": 0.2,
+      "volume": 297,
+      "impact_score": 0.0594,
+      "raw_data": {
+        "post": "Selling my BTC bag, too much volatility for me",
+        "engagement": 297
+      },
+      "keywords": [],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-08T21:58:09.189198",
+      "source": "discord",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 657,
+      "impact_score": 0.0,
+      "raw_data": {
+        "post": "BTC breaking resistance! Next stop $100k",
+        "engagement": 657
+      },
+      "keywords": [],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-08T21:28:09.189198",
+      "source": "telegram",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1092,
+      "impact_score": 0.0,
+      "raw_data": {
+        "post": "FUD around BTC is getting intense, but I'm staying strong",
+        "engagement": 1092
+      },
+      "keywords": [],
+      "influence_level": "medium"
+    },
+    {
+      "timestamp": "2025-08-09T00:58:09.189290",
+      "source": "news_cointelegraph",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "BTC Institutional Adoption Surges as Major Banks Enter Market",
+        "source": "CoinTelegraph"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T23:58:09.189290",
+      "source": "news_coindesk",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "Regulatory Uncertainty Clouds BTC Short-term Outlook",
+        "source": "CoinDesk"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T22:58:09.189290",
+      "source": "news_decrypt",
+      "coin_symbol": "BTC",
+      "sentiment_score": 1.0,
+      "confidence": 0.4,
+      "volume": 1,
+      "impact_score": 0.6000000000000001,
+      "raw_data": {
+        "headline": "Technical Analysis: BTC Forms Bullish Continuation Pattern",
+        "source": "Decrypt"
+      },
+      "keywords": [
+        "bull"
+      ],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T21:58:09.189290",
+      "source": "news_blockworks",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "Market Correction: BTC Tests Key Support Levels",
+        "source": "BlockWorks"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T20:58:09.189290",
+      "source": "news_cointelegraph",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "Breaking: Major BTC Whale Transfers $100M to Exchange",
+        "source": "CoinTelegraph"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T19:58:09.189290",
+      "source": "news_coindesk",
+      "coin_symbol": "BTC",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "BTC Network Upgrade Promises Enhanced Scalability",
+        "source": "CoinDesk"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-09T00:58:09.189716",
+      "source": "twitter",
+      "coin_symbol": "ETH",
+      "sentiment_score": 1.0,
+      "confidence": 0.4,
+      "volume": 1303,
+      "impact_score": 0.5212,
+      "raw_data": {
+        "post": "ETH is looking bullish! Great momentum building \ud83d\ude80",
+        "engagement": 1303
+      },
+      "keywords": [
+        "bull"
+      ],
+      "influence_level": "medium"
+    },
+    {
+      "timestamp": "2025-08-09T00:28:09.189716",
+      "source": "reddit",
+      "coin_symbol": "ETH",
+      "sentiment_score": 1.0,
+      "confidence": 0.2,
+      "volume": 74,
+      "impact_score": 0.0148,
+      "raw_data": {
+        "post": "Might be time to take profits on ETH, seems overbought",
+        "engagement": 74
+      },
+      "keywords": [],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-08T23:58:09.189716",
+      "source": "discord",
+      "coin_symbol": "ETH",
+      "sentiment_score": 1.0,
+      "confidence": 0.4,
+      "volume": 1751,
+      "impact_score": 0.7004,
+      "raw_data": {
+        "post": "HODL ETH! Long term this is going to moon \ud83c\udf19",
+        "engagement": 1751
+      },
+      "keywords": [
+        "moon",
+        "hodl"
+      ],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T23:28:09.189716",
+      "source": "telegram",
+      "coin_symbol": "ETH",
+      "sentiment_score": -1.0,
+      "confidence": 0.4,
+      "volume": 1565,
+      "impact_score": 0.626,
+      "raw_data": {
+        "post": "ETH chart looks bearish, expecting a pullback",
+        "engagement": 1565
+      },
+      "keywords": [
+        "bear"
+      ],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T22:58:09.189716",
+      "source": "twitter",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 588,
+      "impact_score": 0.0,
+      "raw_data": {
+        "post": "Just bought more ETH! Diamond hands \ud83d\udc8e\ud83d\ude4c",
+        "engagement": 588
+      },
+      "keywords": [
+        "diamond",
+        "hands"
+      ],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-08T22:28:09.189716",
+      "source": "reddit",
+      "coin_symbol": "ETH",
+      "sentiment_score": -1.0,
+      "confidence": 0.2,
+      "volume": 1680,
+      "impact_score": 0.336,
+      "raw_data": {
+        "post": "Selling my ETH bag, too much volatility for me",
+        "engagement": 1680
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T21:58:09.189716",
+      "source": "discord",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 716,
+      "impact_score": 0.0,
+      "raw_data": {
+        "post": "ETH breaking resistance! Next stop $100k",
+        "engagement": 716
+      },
+      "keywords": [],
+      "influence_level": "low"
+    },
+    {
+      "timestamp": "2025-08-08T21:28:09.189716",
+      "source": "telegram",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1976,
+      "impact_score": 0.0,
+      "raw_data": {
+        "post": "FUD around ETH is getting intense, but I'm staying strong",
+        "engagement": 1976
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-09T00:58:09.189771",
+      "source": "news_cointelegraph",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "ETH Institutional Adoption Surges as Major Banks Enter Market",
+        "source": "CoinTelegraph"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T23:58:09.189771",
+      "source": "news_coindesk",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "Regulatory Uncertainty Clouds ETH Short-term Outlook",
+        "source": "CoinDesk"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T22:58:09.189771",
+      "source": "news_decrypt",
+      "coin_symbol": "ETH",
+      "sentiment_score": 1.0,
+      "confidence": 0.4,
+      "volume": 1,
+      "impact_score": 0.6000000000000001,
+      "raw_data": {
+        "headline": "Technical Analysis: ETH Forms Bullish Continuation Pattern",
+        "source": "Decrypt"
+      },
+      "keywords": [
+        "bull"
+      ],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T21:58:09.189771",
+      "source": "news_blockworks",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "Market Correction: ETH Tests Key Support Levels",
+        "source": "BlockWorks"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T20:58:09.189771",
+      "source": "news_cointelegraph",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "Breaking: Major ETH Whale Transfers $100M to Exchange",
+        "source": "CoinTelegraph"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    },
+    {
+      "timestamp": "2025-08-08T19:58:09.189771",
+      "source": "news_coindesk",
+      "coin_symbol": "ETH",
+      "sentiment_score": 0.0,
+      "confidence": 0.3,
+      "volume": 1,
+      "impact_score": 0.0,
+      "raw_data": {
+        "headline": "ETH Network Upgrade Promises Enhanced Scalability",
+        "source": "CoinDesk"
+      },
+      "keywords": [],
+      "influence_level": "high"
+    }
+  ],
+  "sentiment_events": [
+    {
+      "timestamp": "2025-08-09T00:58:09.189605",
+      "event_type": "social_viral",
+      "coin_symbol": "BTC",
+      "severity": "high",
+      "description": "Viral social activity detected: 2190 mentions with 0.67 sentiment",
+      "sentiment_change": 0.6666666666666666,
+      "expected_impact": 0.15,
+      "confidence": 0.7,
+      "sources": [
+        "twitter",
+        "reddit",
+        "discord"
+      ],
+      "duration_estimate": 120
+    },
+    {
+      "timestamp": "2025-08-09T00:58:09.189813",
+      "event_type": "social_viral",
+      "coin_symbol": "ETH",
+      "severity": "medium",
+      "description": "Viral social activity detected: 1377 mentions with 0.67 sentiment",
+      "sentiment_change": 0.6666666666666666,
+      "expected_impact": 0.1377,
+      "confidence": 0.7,
+      "sources": [
+        "twitter",
+        "reddit",
+        "discord"
+      ],
+      "duration_estimate": 120
+    }
+  ],
+  "onchain_metrics": [
+    {
+      "timestamp": "2025-08-09T00:58:09.189599",
+      "coin_symbol": "BTC",
+      "large_transactions": 3,
+      "exchange_flows": {
+        "binance": -652.0008443825676,
+        "coinbase": 79.19630883591056,
+        "kraken": 161.02751421728425
+      },
+      "holder_distribution": {
+        "whales_pct": 0.6122429708502122,
+        "retail_pct": 0.29489347330109794,
+        "institutions_pct": 0.13646241679222054
+      },
+      "network_activity": 0.6308737727131137,
+      "fear_greed_onchain": 0.6813649435855049
+    },
+    {
+      "timestamp": "2025-08-09T00:58:09.189811",
+      "coin_symbol": "ETH",
+      "large_transactions": 14,
+      "exchange_flows": {
+        "binance": -254.20303280630742,
+        "coinbase": -222.70476438263364,
+        "kraken": 92.21003930476441
+      },
+      "holder_distribution": {
+        "whales_pct": 0.7512745715338119,
+        "retail_pct": 0.19141583259174355,
+        "institutions_pct": 0.10397399447804331
+      },
+      "network_activity": 0.657455269272239,
+      "fear_greed_onchain": 0.7712552482597851
+    }
+  ],
+  "last_updated": "2025-08-09T00:58:09.189952"
+}

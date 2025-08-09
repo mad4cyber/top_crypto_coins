@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Real-time Sentiment - Crypto AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sentiment-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(20px);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        .sentiment-card:hover {
+            transform: translateY(-5px);
+        }
+        .sentiment-positive { color: #28a745; }
+        .sentiment-negative { color: #dc3545; }
+        .sentiment-neutral { color: #6c757d; }
+        .fear-greed-meter {
+            width: 200px;
+            height: 100px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .fear-greed-arc {
+            width: 100%;
+            height: 100%;
+            border-radius: 100px 100px 0 0;
+            background: conic-gradient(from 180deg, #dc3545 0deg, #ffc107 90deg, #28a745 180deg);
+            position: relative;
+        }
+        .fear-greed-needle {
+            width: 2px;
+            height: 80px;
+            background: #333;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform-origin: bottom center;
+            transition: transform 0.5s ease;
+        }
+        .sentiment-bubble {
+            border-radius: 20px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .bubble-bullish { border-left-color: #28a745; }
+        .bubble-bearish { border-left-color: #dc3545; }
+        .bubble-neutral { border-left-color: #6c757d; }
+        .event-critical { background: rgba(220, 53, 69, 0.1); border-left: 4px solid #dc3545; }
+        .event-high { background: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; }
+        .event-medium { background: rgba(13, 202, 240, 0.1); border-left: 4px solid #0dcaf0; }
+        .event-low { background: rgba(108, 117, 125, 0.1); border-left: 4px solid #6c757d; }
+        .source-twitter { color: #1da1f2; }
+        .source-reddit { color: #ff4500; }
+        .source-news { color: #333; }
+        .source-discord { color: #7289da; }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .sentiment-gauge {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .gauge-bg {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #dc3545 0deg, #ffc107 120deg, #28a745 240deg, #dc3545 360deg);
+            padding: 8px;
+        }
+        .gauge-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .trending-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .keyword-tag {
+            background: rgba(13, 202, 240, 0.2);
+            color: #0dcaf0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain"></i> Crypto AI Predictor
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/analysis">Analysis</a>
+                <a class="nav-link" href="/charts">Charts</a>
+                <a class="nav-link" href="/portfolio">Portfolio</a>
+                <a class="nav-link" href="/alerts">Alerts</a>
+                <a class="nav-link" href="/performance">Performance</a>
+                <a class="nav-link" href="/ml-optimization">🧠 ML Optimization</a>
+                <a class="nav-link active" href="/realtime-sentiment">📊 Live Sentiment</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="sentiment-card p-4 text-center">
+                    <h2>📊 Real-time Market Sentiment Analysis</h2>
+                    <p class="text-muted">
+                        <span class="live-indicator pulse-animation"></span>
+                        Live sentiment tracking from social media, news, and on-chain data
+                    </p>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-primary" onclick="refreshSentiment()">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                        <button class="btn btn-success" onclick="startAutoRefresh()">
+                            <i class="fas fa-play"></i> Auto Refresh
+                        </button>
+                        <button class="btn btn-warning" onclick="stopAutoRefresh()">
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Sentiment Metrics -->
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="sentiment-card p-3 text-center">
+                    <h6>😰 Fear & Greed Index</h6>
+                    <div class="fear-greed-meter">
+                        <div class="fear-greed-arc">
+                            <div id="fearGreedNeedle" class="fear-greed-needle" style="transform: rotate(-90deg);"></div>
+                        </div>
+                    </div>
+                    <div id="fearGreedValue" class="h3 mt-2">--</div>
+                    <div id="fearGreedLabel" class="text-muted">Loading...</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3">
+                <div class="sentiment-card p-3 text-center">
+                    <h6>📱 Social Sentiment</h6>
+                    <div class="sentiment-gauge">
+                        <div class="gauge-bg">
+                            <div class="gauge-inner">
+                                <div id="socialSentiment" class="h4">--</div>
+                                <small class="text-muted">Score</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="socialTrend" class="mt-2 text-muted">--</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3">
+                <div class="sentiment-card p-3 text-center">
+                    <h6>📰 News Sentiment</h6>
+                    <div class="sentiment-gauge">
+                        <div class="gauge-bg">
+                            <div class="gauge-inner">
+                                <div id="newsSentiment" class="h4">--</div>
+                                <small class="text-muted">Score</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="newsTrend" class="mt-2 text-muted">--</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3">
+                <div class="sentiment-card p-3 text-center">
+                    <h6>📊 Market Mood</h6>
+                    <div id="marketMood" class="h3 sentiment-neutral">Neutral</div>
+                    <div id="moodDescription" class="text-muted">Analyzing...</div>
+                    <div class="mt-2">
+                        <div id="confidenceLevel" class="progress">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">Confidence</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coin-specific Sentiment -->
+        <div class="row">
+            <div class="col-12">
+                <div class="sentiment-card p-4">
+                    <h5><i class="fas fa-coins"></i> Coin-Specific Sentiment Analysis</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Select Cryptocurrencies</label>
+                            <select id="coinSelector" class="form-select" multiple size="5">
+                                <option value="BTC" selected>Bitcoin (BTC)</option>
+                                <option value="ETH" selected>Ethereum (ETH)</option>
+                                <option value="BNB">Binance Coin (BNB)</option>
+                                <option value="SOL">Solana (SOL)</option>
+                                <option value="ADA">Cardano (ADA)</option>
+                                <option value="DOT">Polkadot (DOT)</option>
+                                <option value="LINK">Chainlink (LINK)</option>
+                                <option value="MATIC">Polygon (MATIC)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <label class="form-label">Sentiment Analysis Results</label>
+                            <div id="coinSentimentResults" style="max-height: 300px; overflow-y: auto;">
+                                <div class="text-center text-muted p-4">
+                                    <i class="fas fa-chart-line fa-2x mb-3"></i>
+                                    <p>Select coins and click refresh to see sentiment analysis</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Events Feed -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="sentiment-card p-3">
+                    <h6><i class="fas fa-bolt text-warning"></i> Live Sentiment Events</h6>
+                    
+                    <div id="liveEvents" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Events will be populated here -->
+                        <div class="text-center text-muted p-4">
+                            <i class="fas fa-rss"></i><br>
+                            Live events will appear here
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="sentiment-card p-3">
+                    <h6><i class="fas fa-hashtag"></i> Trending Keywords</h6>
+                    
+                    <div id="trendingKeywords">
+                        <!-- Keywords will be populated here -->
+                        <div class="text-center text-muted p-4">
+                            <i class="fas fa-tags"></i><br>
+                            Trending keywords will appear here
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6><i class="fas fa-chart-bar"></i> Source Breakdown</h6>
+                    <div id="sourceBreakdown">
+                        <!-- Source statistics -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sentiment History Chart -->
+        <div class="row">
+            <div class="col-12">
+                <div class="sentiment-card p-4">
+                    <h5><i class="fas fa-chart-area"></i> Sentiment History (24h)</h5>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary active" onclick="setTimeframe('1h')">1H</button>
+                            <button class="btn btn-outline-primary" onclick="setTimeframe('6h')">6H</button>
+                            <button class="btn btn-outline-primary" onclick="setTimeframe('24h')">24H</button>
+                            <button class="btn btn-outline-primary" onclick="setTimeframe('7d')">7D</button>
+                        </div>
+                        
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary" onclick="exportSentimentData()">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <canvas id="sentimentChart" width="800" height="300"></canvas>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="avgSentiment">--</div>
+                            <small class="text-muted">Average Sentiment</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="sentimentVolatility">--</div>
+                            <small class="text-muted">Volatility</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="totalMentions">--</div>
+                            <small class="text-muted">Total Mentions</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h6" id="lastUpdate">--</div>
+                            <small class="text-muted">Last Update</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let autoRefreshInterval = null;
+        let sentimentChart = null;
+        let currentTimeframe = '1h';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSentimentChart();
+            refreshSentiment();
+            
+            // Auto-refresh every 5 minutes
+            startAutoRefresh();
+        });
+
+        function initializeSentimentChart() {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            
+            sentimentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Overall Sentiment',
+                            data: [],
+                            borderColor: '#0dcaf0',
+                            backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Social Media',
+                            data: [],
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'News',
+                            data: [],
+                            borderColor: '#fd7e14',
+                            backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                            fill: false,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: -1,
+                            max: 1,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        async function refreshSentiment() {
+            try {
+                // Get selected coins
+                const coinSelector = document.getElementById('coinSelector');
+                const selectedCoins = Array.from(coinSelector.selectedOptions).map(option => option.value);
+                
+                if (selectedCoins.length === 0) {
+                    selectedCoins.push('BTC', 'ETH'); // Default coins
+                }
+                
+                // Show loading
+                showLoading();
+                
+                const response = await fetch('/api/realtime-sentiment/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        coin_symbols: selectedCoins,
+                        hours_back: 24
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Update displays
+                displayGlobalSentiment(data);
+                displayCoinSentiment(data);
+                displayLiveEvents(data);
+                updateSentimentChart(data);
+                
+                // Update last refresh time
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                
+            } catch (error) {
+                console.error('Failed to refresh sentiment:', error);
+                showError('Failed to refresh sentiment data: ' + error.message);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('fearGreedValue').textContent = '...';
+            document.getElementById('socialSentiment').textContent = '...';
+            document.getElementById('newsSentiment').textContent = '...';
+            document.getElementById('marketMood').textContent = 'Loading...';
+        }
+
+        function displayGlobalSentiment(data) {
+            // Calculate global metrics from all coins
+            let totalSocialSentiment = 0;
+            let totalNewsSentiment = 0;
+            let totalConfidence = 0;
+            let fearGreedSum = 0;
+            let coinCount = 0;
+            
+            for (const [coin, coinData] of Object.entries(data)) {
+                if (coinData.error) continue;
+                
+                const agg = coinData.aggregated_sentiment || {};
+                totalSocialSentiment += agg.social_sentiment || 0;
+                totalNewsSentiment += agg.news_sentiment || 0;
+                totalConfidence += agg.confidence || 0;
+                fearGreedSum += coinData.fear_greed_index || 50;
+                coinCount++;
+            }
+            
+            if (coinCount > 0) {
+                // Fear & Greed Index
+                const avgFearGreed = fearGreedSum / coinCount;
+                document.getElementById('fearGreedValue').textContent = avgFearGreed.toFixed(0);
+                document.getElementById('fearGreedLabel').textContent = getFearGreedLabel(avgFearGreed);
+                
+                // Update needle rotation (-90 to +90 degrees)
+                const needleRotation = (avgFearGreed - 50) * 1.8; // Scale to -90 to +90
+                document.getElementById('fearGreedNeedle').style.transform = `rotate(${needleRotation}deg)`;
+                
+                // Social Sentiment
+                const avgSocial = totalSocialSentiment / coinCount;
+                document.getElementById('socialSentiment').textContent = (avgSocial * 100).toFixed(0);
+                document.getElementById('socialTrend').textContent = avgSocial > 0 ? '📈 Bullish' : avgSocial < 0 ? '📉 Bearish' : '➡️ Neutral';
+                
+                // News Sentiment
+                const avgNews = totalNewsSentiment / coinCount;
+                document.getElementById('newsSentiment').textContent = (avgNews * 100).toFixed(0);
+                document.getElementById('newsTrend').textContent = avgNews > 0 ? '📈 Positive' : avgNews < 0 ? '📉 Negative' : '➡️ Neutral';
+                
+                // Market Mood
+                const overallSentiment = (avgSocial + avgNews) / 2;
+                const mood = getMarketMood(overallSentiment, avgFearGreed);
+                document.getElementById('marketMood').textContent = mood.label;
+                document.getElementById('marketMood').className = `h3 ${mood.class}`;
+                document.getElementById('moodDescription').textContent = mood.description;
+                
+                // Confidence
+                const avgConfidence = totalConfidence / coinCount;
+                const confidenceBar = document.querySelector('#confidenceLevel .progress-bar');
+                confidenceBar.style.width = `${avgConfidence * 100}%`;
+                confidenceBar.className = `progress-bar ${getConfidenceClass(avgConfidence)}`;
+            }
+        }
+
+        function getFearGreedLabel(value) {
+            if (value >= 80) return 'Extreme Greed';
+            if (value >= 60) return 'Greed';
+            if (value >= 40) return 'Neutral';
+            if (value >= 20) return 'Fear';
+            return 'Extreme Fear';
+        }
+
+        function getMarketMood(sentiment, fearGreed) {
+            const combined = (sentiment + (fearGreed - 50) / 50) / 2;
+            
+            if (combined > 0.3) {
+                return {
+                    label: '🚀 Very Bullish',
+                    class: 'sentiment-positive',
+                    description: 'Strong positive sentiment across all sources'
+                };
+            } else if (combined > 0.1) {
+                return {
+                    label: '📈 Bullish',
+                    class: 'sentiment-positive',
+                    description: 'Generally positive market sentiment'
+                };
+            } else if (combined > -0.1) {
+                return {
+                    label: '⚖️ Neutral',
+                    class: 'sentiment-neutral',
+                    description: 'Mixed sentiment signals'
+                };
+            } else if (combined > -0.3) {
+                return {
+                    label: '📉 Bearish',
+                    class: 'sentiment-negative',
+                    description: 'Generally negative market sentiment'
+                };
+            } else {
+                return {
+                    label: '💥 Very Bearish',
+                    class: 'sentiment-negative',
+                    description: 'Strong negative sentiment across sources'
+                };
+            }
+        }
+
+        function getConfidenceClass(confidence) {
+            if (confidence > 0.7) return 'bg-success';
+            if (confidence > 0.4) return 'bg-warning';
+            return 'bg-danger';
+        }
+
+        function displayCoinSentiment(data) {
+            const container = document.getElementById('coinSentimentResults');
+            container.innerHTML = '';
+            
+            for (const [coin, coinData] of Object.entries(data)) {
+                if (coinData.error) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-warning';
+                    errorDiv.innerHTML = `<strong>${coin}:</strong> ${coinData.error}`;
+                    container.appendChild(errorDiv);
+                    continue;
+                }
+                
+                const agg = coinData.aggregated_sentiment || {};
+                const sentiment = agg.overall_sentiment || 0;
+                const trend = agg.trend_direction || 'neutral';
+                
+                const coinDiv = document.createElement('div');
+                coinDiv.className = `sentiment-bubble bubble-${trend}`;
+                coinDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${coin}</strong>
+                            <div class="small text-muted">
+                                Social: ${agg.social_sentiment ? (agg.social_sentiment * 100).toFixed(0) : '--'}% | 
+                                News: ${agg.news_sentiment ? (agg.news_sentiment * 100).toFixed(0) : '--'}%
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="h6 mb-0 ${sentiment > 0 ? 'sentiment-positive' : sentiment < 0 ? 'sentiment-negative' : 'sentiment-neutral'}">
+                                ${(sentiment * 100).toFixed(1)}%
+                            </div>
+                            <small class="text-muted">${trend}</small>
+                        </div>
+                    </div>
+                    <div class="trending-keywords">
+                        ${generateKeywordTags(coinData)}
+                    </div>
+                `;
+                container.appendChild(coinDiv);
+            }
+        }
+
+        function generateKeywordTags(coinData) {
+            // Mock trending keywords based on sentiment
+            const keywords = ['bullish', 'hodl', 'moon', 'pump', 'buy', 'bearish', 'dip', 'sell'];
+            return keywords.slice(0, 4).map(keyword => 
+                `<span class="keyword-tag">#${keyword}</span>`
+            ).join('');
+        }
+
+        function displayLiveEvents(data) {
+            const container = document.getElementById('liveEvents');
+            container.innerHTML = '';
+            
+            let allEvents = [];
+            for (const [coin, coinData] of Object.entries(data)) {
+                if (coinData.recent_events) {
+                    allEvents = allEvents.concat(coinData.recent_events.map(event => ({...event, coin})));
+                }
+            }
+            
+            // Sort by timestamp (most recent first)
+            allEvents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            if (allEvents.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted p-3">No recent events detected</div>';
+                return;
+            }
+            
+            allEvents.slice(0, 10).forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = `p-3 mb-2 rounded event-${event.severity}`;
+                eventDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${getEventIcon(event.event_type)} ${event.event_type.replace('_', ' ').toUpperCase()}</strong>
+                            <div class="small">${event.coin} • ${new Date(event.timestamp).toLocaleTimeString()}</div>
+                        </div>
+                        <span class="badge bg-${getSeverityColor(event.severity)}">${event.severity}</span>
+                    </div>
+                    <div class="mt-2">${event.description}</div>
+                    <div class="small text-muted mt-1">
+                        Expected Impact: ${(event.expected_impact * 100).toFixed(1)}% | 
+                        Confidence: ${(event.confidence * 100).toFixed(0)}%
+                    </div>
+                `;
+                container.appendChild(eventDiv);
+            });
+        }
+
+        function getEventIcon(eventType) {
+            const icons = {
+                'social_viral': '🔥',
+                'news_spike': '📰',
+                'whale_movement': '🐋',
+                'fear_extreme': '😨',
+                'greed_extreme': '🤑'
+            };
+            return icons[eventType] || '📊';
+        }
+
+        function getSeverityColor(severity) {
+            const colors = {
+                'critical': 'danger',
+                'high': 'warning',
+                'medium': 'info',
+                'low': 'secondary'
+            };
+            return colors[severity] || 'secondary';
+        }
+
+        function updateSentimentChart(data) {
+            // Mock historical data for chart
+            const now = new Date();
+            const labels = [];
+            const overallData = [];
+            const socialData = [];
+            const newsData = [];
+            
+            // Generate last 24 hours of data points
+            for (let i = 23; i >= 0; i--) {
+                const time = new Date(now.getTime() - i * 60 * 60 * 1000);
+                labels.push(time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}));
+                
+                // Simulate sentiment evolution over time
+                const baseOverall = Math.sin(i * 0.3) * 0.3;
+                const baseSocial = Math.sin(i * 0.2 + 1) * 0.4;
+                const baseNews = Math.sin(i * 0.4 + 2) * 0.2;
+                
+                overallData.push(baseOverall + Math.random() * 0.2 - 0.1);
+                socialData.push(baseSocial + Math.random() * 0.2 - 0.1);
+                newsData.push(baseNews + Math.random() * 0.15 - 0.075);
+            }
+            
+            // Update chart
+            sentimentChart.data.labels = labels;
+            sentimentChart.data.datasets[0].data = overallData;
+            sentimentChart.data.datasets[1].data = socialData;
+            sentimentChart.data.datasets[2].data = newsData;
+            sentimentChart.update();
+            
+            // Update summary stats
+            document.getElementById('avgSentiment').textContent = (overallData.reduce((a, b) => a + b, 0) / overallData.length * 100).toFixed(1) + '%';
+            document.getElementById('sentimentVolatility').textContent = (Math.sqrt(overallData.reduce((sq, n, _, arr) => sq + Math.pow(n - arr.reduce((a, b) => a + b, 0) / arr.length, 2), 0) / overallData.length) * 100).toFixed(1) + '%';
+            
+            // Calculate total mentions from data
+            let totalMentions = 0;
+            for (const [coin, coinData] of Object.entries(data)) {
+                if (coinData.aggregated_sentiment) {
+                    totalMentions += coinData.aggregated_sentiment.total_volume || 0;
+                }
+            }
+            document.getElementById('totalMentions').textContent = totalMentions.toLocaleString();
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            autoRefreshInterval = setInterval(refreshSentiment, 300000); // 5 minutes
+            
+            // Update button states
+            document.querySelector('button[onclick="startAutoRefresh()"]').disabled = true;
+            document.querySelector('button[onclick="stopAutoRefresh()"]').disabled = false;
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            
+            // Update button states
+            document.querySelector('button[onclick="startAutoRefresh()"]').disabled = false;
+            document.querySelector('button[onclick="stopAutoRefresh()"]').disabled = true;
+        }
+
+        function setTimeframe(timeframe) {
+            // Update active button
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentTimeframe = timeframe;
+            
+            // In a real implementation, this would fetch different historical data
+            console.log('Timeframe changed to:', timeframe);
+        }
+
+        function exportSentimentData() {
+            // Mock export functionality
+            const data = {
+                timestamp: new Date().toISOString(),
+                timeframe: currentTimeframe,
+                sentiment_data: 'Mock sentiment data for export'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sentiment_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showError(message) {
+            // Simple error display
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.right = '20px';
+            errorDiv.style.zIndex = '9999';
+            errorDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(errorDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
